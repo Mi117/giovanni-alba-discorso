@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Discorso — Giovanni & Alba</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@400;500;600&display=swap');
+
+  :root {
+    --cream: #faf6ef;
+    --ink: #2b241d;
+    --gold: #a8823c;
+    --gold-soft: #cfae6f;
+    --line: #e3d9c4;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--cream);
+    color: var(--ink);
+    font-family: 'Inter', sans-serif;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 48px 24px 80px;
+    position: relative;
+  }
+
+  .lang-toggle {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 100;
+    display: flex;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 4px;
+    box-shadow: 0 4px 16px rgba(43, 36, 29, 0.08);
+  }
+
+  .lang-btn {
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    padding: 7px 16px;
+    border: none;
+    background: transparent;
+    color: #a39a89;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+  }
+
+  .lang-btn.active {
+    background: var(--ink);
+    color: var(--cream);
+  }
+
+  .lang-btn:focus-visible {
+    outline: 2px solid var(--gold);
+    outline-offset: 2px;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 40px;
+  }
+
+  .monogram {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 15px;
+    letter-spacing: 0.35em;
+    color: var(--gold);
+    text-transform: uppercase;
+    margin-bottom: 18px;
+  }
+
+  h1 {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 500;
+    font-size: 42px;
+    line-height: 1.15;
+    margin: 0 0 12px;
+  }
+
+  h1 em {
+    font-style: italic;
+    color: var(--gold);
+  }
+
+  .subtitle {
+    font-size: 15px;
+    color: #6b6152;
+    margin: 0;
+  }
+
+  .divider {
+    width: 56px;
+    height: 1px;
+    background: var(--gold-soft);
+    margin: 28px auto;
+  }
+
+  .note {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 18px 20px;
+    font-size: 14px;
+    color: #6b6152;
+    margin-bottom: 44px;
+    text-align: center;
+  }
+
+  .note strong {
+    color: var(--ink);
+  }
+
+  .speech p {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 21px;
+    margin: 0 0 22px;
+  }
+
+  .speech p.pausa {
+    text-align: center;
+    font-style: italic;
+    color: var(--gold);
+    font-size: 17px;
+    margin: -6px 0 22px;
+  }
+
+  .speech p.finale {
+    text-align: center;
+    font-weight: 600;
+    font-style: italic;
+    color: var(--ink);
+  }
+
+  footer {
+    text-align: center;
+    margin-top: 56px;
+    padding-top: 28px;
+    border-top: 1px solid var(--line);
+    font-size: 13px;
+    color: #a39a89;
+    font-family: 'Inter', sans-serif;
+    letter-spacing: 0.03em;
+  }
+
+  footer .heart {
+    color: var(--gold);
+  }
+
+  @media (max-width: 420px) {
+    h1 { font-size: 34px; }
+    .speech p { font-size: 19px; }
+  }
+</style>
+</head>
+<body>
+  <div class="lang-toggle" role="group" aria-label="Selezione lingua / Selección de idioma">
+    <button class="lang-btn active" id="btn-it" onclick="setLang('it')">IT</button>
+    <button class="lang-btn" id="btn-es" onclick="setLang('es')">ES</button>
+  </div>
+
+  <div class="wrap">
+
+    <!-- ===== ITALIAN VERSION ===== -->
+    <div id="lang-it">
+      <header>
+        <div class="monogram">G &amp; A · 14 Agosto 2026</div>
+        <h1>Il discorso, <em>in italiano</em></h1>
+        <p class="subtitle">Per chi preferisce seguirlo nella propria lingua</p>
+      </header>
+
+      <div class="note">
+        Il discorso sarà pronunciato <strong>in spagnolo</strong>. Questa pagina contiene la traduzione italiana, da leggere <strong>con calma, quando preferite</strong> — prima, durante o dopo. Nessun aggiornamento in diretta: il testo è già tutto qui.
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="speech">
+        <p>Signore e signori, buongiorno a tutti. Prima di tutto, vi ringrazio moltissimo per essere qui, e soprattutto voglio ringraziare gli sposi per l'onore di essere qui in questo giorno così speciale. Vi chiedo solo di regalarmi qualche minuto del vostro prezioso tempo per raccontarvi qualcosa.</p>
+
+        <p>Prima di tutto voglio scusarmi, soprattutto con tutte le donne, perché quello che succederà nei prossimi minuti causerà qualche problema di trucco (io sarò il primo). Signori, nemmeno voi siete salvi. E a chi ha portato i fazzoletti, complimenti, avete fatto i compiti. A chi non li ha portati... beh, anche i tovaglioli del tavolo funzionano.</p>
+
+        <p>E allora, da dove cominciamo?</p>
+
+        <p>Giovanni, voi lo conoscete, no? È una di quelle persone che se lo lasci da solo cinque minuti in qualsiasi posto, quando torni si è già fatto amico di tutti — persino del cameriere, persino del cane di casa. Credo che nemmeno lui sappia come ci riesce. E non fatevi ingannare dalla sua statura non proprio imponente, perché è pieno di energia, pieno di quella cosa che potremmo definire vita o, meglio ancora, luce — non è vero? Lo conosco da una vita intera, siamo insieme da tantissimi anni, oltre a un mucchio di aneddoti che qui non vi racconterò (non si sa mai se c'è la polizia da queste parti), ma potete immaginarveli solo guardando la giacca che indossa.</p>
+
+        <p>Abbiamo vissuto momenti bellissimi insieme, circondati da amici veri che sono diventati famiglia —</p>
+        <p class="pausa">(pausa)</p>
+        <p>— qualcosa che porto sempre nel cuore e che, penso, fa parte di tutto ciò che siamo, giusto?</p>
+
+        <p>E anche se abbiamo preso strade diverse nella vita, entrambi abbiamo sempre cercato la stessa cosa: essere fedeli a noi stessi. Ora, tranquilli, non spaventatevi — non sono qui per fare lezione, ve lo prometto. Ma datemi un secondo, perché c'è un po' di fisica che credo spieghi questo meglio di me.</p>
+
+        <p>Cosa succede all'energia, o alla luce, quando incontra una forza così potente come la gravità?</p>
+        <p class="pausa">(pausa)</p>
+
+        <p>Ne viene attratta — ed è esattamente quello che è successo. È arrivato il giorno, nel suo cammino, in cui ha incontrato questa donna meravigliosa, questa anima così bella, capace di attrarre quella luce verso di sé — e da lì oggi possiamo essere testimoni di questa unione. Qualcosa di così meraviglioso: due anime fuse in una e, insieme a questo, anche la creazione di una vita — Mia.</p>
+
+        <p>Quindi, Giovanni, Alba: se la fisica ha ragione, non avete più scampo — la gravità non si discute. E sinceramente, meno male, perché io non voglio vivere in un mondo dove voi due non siete insieme.</p>
+
+        <p>E allora sì, vi chiedo a tutti di unirvi a me alzando i calici, e concludo dicendo un'ultima cosa:</p>
+
+        <p class="finale">Per un'eternità di felicità, amore e prosperità... e che continuiate a essere luce, illuminando le nostre vite.</p>
+
+        <p class="pausa">(alzano i calici)</p>
+
+        <p class="finale">Vi amiamo tanto, salute! 🥂</p>
+      </div>
+
+      <footer>
+        Con affetto, per gli amici che preferiscono l'italiano <span class="heart">♥</span>
+      </footer>
+    </div>
+
+    <!-- ===== SPANISH VERSION ===== -->
+    <div id="lang-es" style="display:none;">
+      <header>
+        <div class="monogram">G &amp; A · 14 Agosto 2026</div>
+        <h1>El discurso, <em>en español</em></h1>
+        <p class="subtitle">Para quienes prefieren seguirlo en su propio idioma</p>
+      </header>
+
+      <div class="note">
+        El discurso se pronunciará <strong>en español</strong>. Esta página contiene el texto original, para leer <strong>con calma, cuando prefieran</strong> — antes, durante o después. Sin actualizaciones en vivo: el texto ya está completo aquí.
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="speech">
+        <p>Damas y caballeros, muy buenos días a todos. Primero que todo, les agradezco muchísimo por estar aquí, y sobre todo quiero agradecerles a los recién casados por el honor de estar aquí en este día tan especial. Solamente les pido a todos ustedes que me regalen unos minutos de su valioso tiempo para poder contarles algo.</p>
+
+        <p>Primero que todo quiero pedirles disculpas, sobre todo a todas las mujeres, porque lo que va a pasar en los próximos minutos les va a causar problemas de maquillaje (yo seré el primero). Caballeros, ustedes tampoco se escapan. Y a los que trajeron pañuelos, felicidades, hicieron la tarea. A los que no... bueno, las servilletas de la mesa también sirven.</p>
+
+        <p>Y bueno, ¿por dónde empezamos?</p>
+
+        <p>Giovanni, ustedes lo conocen, ¿no? Es de esas personas que si lo dejas solo cinco minutos en cualquier lado, cuando vuelves ya se hizo amigo de todo el mundo — hasta del mesero, hasta del perro de la casa. Yo creo que ni él sabe cómo lo hace. Y no se dejen engañar por la estatura pequeña que tiene, porque está lleno de energía, lleno de algo que podríamos definir como vida o, mejor dicho, como luz — ¿no les parece? Lo conozco desde hace toda una vida, llevamos muchos años juntos, además de un montón de anécdotas que aquí no les voy a contar (uno nunca sabe si hay policía por ahí cerca), pero se las pueden imaginar solo con verle la chaqueta que tiene puesta.</p>
+
+        <p>Hemos pasado momentos muy lindos juntos, rodeados de buenos amigos que se han convertido en familia —</p>
+        <p class="pausa">(pausa)</p>
+        <p>— algo que llevo siempre en el corazón y que, pienso, es parte de todo lo que somos, ¿cierto?</p>
+
+        <p>Y aunque hemos tomado caminos diferentes en la vida, los dos siempre hemos ido buscando lo mismo: ser fieles a nosotros mismos. Ahora, tranquilos, no se me asusten — no vine aquí a dar clase, se los prometo. Pero denme un segundo, porque hay algo de física que me parece que explica esto mejor que yo.</p>
+
+        <p>¿Qué le pasa a la energía, o a la luz, cuando se encuentra con una fuerza tan poderosa como la gravedad?</p>
+        <p class="pausa">(pausa)</p>
+
+        <p>Es atraída por ella — y eso es, básicamente, lo que pasó. Llegó el día, en su camino, en que encontró a esta mujer maravillosa, a esta alma tan linda, capaz de atraer esa luz hacia ella misma — y de ahí podemos hoy ser testigos de esa unión. Algo tan maravilloso: dos almas fundidas en una y, junto con eso, también, la creación de una vida — Mia.</p>
+
+        <p>Así que bueno, Giovanni, Alba: si la física tiene razón, ya no tienen escapatoria — la gravedad no se negocia. Y sinceramente, qué bueno, porque yo no quiero vivir en un mundo donde ustedes dos no estén juntos.</p>
+
+        <p>Así que ahora sí, quiero pedirles a todos que se unan a mí levantando las copas, y termino diciendo una última cosa:</p>
+
+        <p class="finale">Por una eternidad de felicidad, amor y prosperidad... y que sigan siendo luz, iluminando nuestras vidas.</p>
+
+        <p class="pausa">(levantan las copas)</p>
+
+        <p class="finale">¡Los amamos mucho, y salud! 🥂</p>
+      </div>
+
+      <footer>
+        Con cariño, para los amigos que prefieren el español <span class="heart">♥</span>
+      </footer>
+    </div>
+
+  </div>
+
+  <script>
+    function setLang(lang) {
+      const isIt = lang === 'it';
+      document.getElementById('lang-it').style.display = isIt ? '' : 'none';
+      document.getElementById('lang-es').style.display = isIt ? 'none' : '';
+      document.getElementById('btn-it').classList.toggle('active', isIt);
+      document.getElementById('btn-es').classList.toggle('active', !isIt);
+      document.documentElement.lang = lang;
+      try { localStorage.setItem('speechLang', lang); } catch (e) {}
+    }
+
+    (function initLang() {
+      let saved = null;
+      try { saved = localStorage.getItem('speechLang'); } catch (e) {}
+      if (saved === 'es') setLang('es');
+    })();
+  </script>
+</body>
+</html>
