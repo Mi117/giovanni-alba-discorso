@@ -20,10 +20,13 @@
   body {
     margin: 0;
     background: var(--cream);
+    background: linear-gradient(180deg, #faf6ef 0%, #f7f1e6 50%, #f3ecdd 100%);
+    background-attachment: fixed;
     color: var(--ink);
     font-family: 'Inter', sans-serif;
     line-height: 1.6;
     -webkit-font-smoothing: antialiased;
+    transition: background 1.2s ease-out;
   }
 
   .wrap {
@@ -75,6 +78,11 @@
     margin-bottom: 40px;
   }
 
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
   .monogram {
     font-family: 'Cormorant Garamond', serif;
     font-size: 15px;
@@ -82,6 +90,8 @@
     color: var(--gold);
     text-transform: uppercase;
     margin-bottom: 18px;
+    opacity: 0;
+    animation: fadeUp 0.7s ease-out 0.05s forwards;
   }
 
   h1 {
@@ -90,6 +100,8 @@
     font-size: 42px;
     line-height: 1.15;
     margin: 0 0 12px;
+    opacity: 0;
+    animation: fadeUp 0.7s ease-out 0.18s forwards;
   }
 
   h1 em {
@@ -101,13 +113,22 @@
     font-size: 15px;
     color: #6b6152;
     margin: 0;
+    opacity: 0;
+    animation: fadeUp 0.7s ease-out 0.30s forwards;
   }
 
   .divider {
-    width: 56px;
+    width: 0;
     height: 1px;
     background: var(--gold-soft);
     margin: 28px auto;
+    animation: growLine 0.9s ease-out 0.45s forwards;
+    will-change: transform;
+  }
+
+  @keyframes growLine {
+    from { width: 0; opacity: 0; }
+    to   { width: 56px; opacity: 1; }
   }
 
   .note {
@@ -119,6 +140,8 @@
     color: #6b6152;
     margin-bottom: 44px;
     text-align: center;
+    opacity: 0;
+    animation: fadeUp 0.7s ease-out 0.55s forwards;
   }
 
   .note strong {
@@ -129,6 +152,14 @@
     font-family: 'Cormorant Garamond', serif;
     font-size: 21px;
     margin: 0 0 22px;
+    opacity: 0;
+    transform: translateY(18px);
+    transition: opacity 0.7s ease-out, transform 0.7s ease-out;
+  }
+
+  .speech p.in-view {
+    opacity: 1;
+    transform: translateY(0);
   }
 
   .speech p.pausa {
@@ -137,6 +168,11 @@
     color: var(--gold);
     font-size: 17px;
     margin: -6px 0 22px;
+    transition: opacity 0.7s ease-out, transform 0.7s ease-out, letter-spacing 0.9s ease-out 0.15s;
+  }
+
+  .speech p.pausa.in-view {
+    letter-spacing: 0.06em;
   }
 
   .speech p.finale {
@@ -155,19 +191,74 @@
     color: #a39a89;
     font-family: 'Inter', sans-serif;
     letter-spacing: 0.03em;
+    opacity: 0;
+    transform: translateY(14px);
+    transition: opacity 0.7s ease-out, transform 0.7s ease-out;
+  }
+
+  footer.in-view {
+    opacity: 1;
+    transform: translateY(0);
   }
 
   footer .heart {
     color: var(--gold);
   }
 
+  #lang-it, #lang-es {
+    animation: langFadeIn 0.45s ease-out;
+  }
+
+  @keyframes langFadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  #confetti-canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    z-index: 500;
+  }
+
+  .sparkle {
+    position: fixed;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--gold-soft);
+    pointer-events: none;
+    z-index: 400;
+    animation: sparkleFade 0.7s ease-out forwards;
+  }
+
+  @keyframes sparkleFade {
+    from { opacity: 0.9; transform: scale(1) translateY(0); }
+    to   { opacity: 0; transform: scale(0.3) translateY(-14px); }
+  }
+
   @media (max-width: 420px) {
     h1 { font-size: 34px; }
     .speech p { font-size: 19px; }
   }
+
+  @media (prefers-reduced-motion: reduce) {
+    .monogram, h1, .subtitle, .note, .speech p, footer, #lang-it, #lang-es, .divider {
+      animation: none !important;
+      transition: none !important;
+      opacity: 1 !important;
+      transform: none !important;
+      width: 56px !important;
+    }
+  }
 </style>
 </head>
 <body>
+  <canvas id="confetti-canvas" aria-hidden="true"></canvas>
+
   <div class="lang-toggle" role="group" aria-label="Selezione lingua / Selección de idioma">
     <button class="lang-btn active" id="btn-it" onclick="setLang('it')">IT</button>
     <button class="lang-btn" id="btn-es" onclick="setLang('es')">ES</button>
@@ -184,7 +275,7 @@
       </header>
 
       <div class="note">
-        Il discorso sarà pronunciato <strong>in spagnolo</strong>. Questa pagina contiene la traduzione italiana, da leggere <strong>con calma, quando preferite</strong> — prima, durante o dopo.
+        Il discorso sarà pronunciato <strong>in spagnolo</strong>. Questa pagina contiene la traduzione italiana, da leggere <strong>con calma, quando preferite</strong> — prima, durante o dopo. Nessun aggiornamento in diretta: il testo è già tutto qui.
       </div>
 
       <div class="divider"></div>
@@ -196,28 +287,28 @@
 
         <p>E allora, da dove cominciamo?</p>
 
-        <p>Giovanni, voi lo conoscete, no? È una di quelle persone che se lo lasci da solo cinque minuti in qualsiasi posto, quando torni si è già fatto amico di tutti — persino del cameriere, persino del cane di casa. Credo che nemmeno lui sappia come ci riesce. E non fatevi ingannare dalla sua statura non proprio imponente, perché è pieno di energia, pieno di quella cosa che potremmo definire <b>vita</b> o, meglio ancora, <b>luce</b> — non è vero? Lo conosco da una vita intera, siamo insieme da tantissimi anni, oltre a un mucchio di aneddoti che qui non vi racconterò (non si sa mai se c'è la polizia da queste parti), ma potete immaginarveli solo guardando la giacca che indossa.</p>
+        <p>Giovanni, voi lo conoscete, no? È una di quelle persone che se lo lasci da solo cinque minuti in qualsiasi posto, quando torni si è già fatto amico di tutti — persino del cameriere, persino del cane di casa. Credo che nemmeno lui sappia come ci riesce. E non fatevi ingannare dalla sua statura non proprio imponente, perché è pieno di energia, pieno di quella cosa che potremmo definire vita o, meglio ancora, luce — non è vero? Lo conosco da una vita intera, siamo insieme da tantissimi anni, oltre a un mucchio di aneddoti che qui non vi racconterò (non si sa mai se c'è la polizia da queste parti), ma potete immaginarveli solo guardando la giacca che indossa.</p>
 
         <p>Abbiamo vissuto momenti bellissimi insieme, circondati da amici veri che sono diventati famiglia —</p>
         <p class="pausa">(pausa)</p>
         <p>— qualcosa che porto sempre nel cuore e che, penso, fa parte di tutto ciò che siamo, giusto?</p>
 
-        <p>E anche se abbiamo preso strade diverse nella vita, entrambi abbiamo sempre cercato la stessa cosa: essere fedeli a noi stessi. Ora, tranquilli, non spaventatevi — non sono qui per fare lezione, ve lo prometto. Ma datemi un secondo, perché c'è un concetto di fisica che credo spieghi questo meglio di me.</p>
+        <p>E anche se abbiamo preso strade diverse nella vita, entrambi abbiamo sempre cercato la stessa cosa: essere fedeli a noi stessi. Ora, tranquilli, non spaventatevi — non sono qui per fare lezione, ve lo prometto. Ma datemi un secondo, perché c'è un po' di fisica che credo spieghi questo meglio di me.</p>
 
-        <p><b>Cosa succede all'energia, o alla luce, quando incontra una forza così potente come la gravità?</b></p>
+        <p>Cosa succede all'energia, o alla luce, quando incontra una forza così potente come la gravità?</p>
         <p class="pausa">(pausa)</p>
 
-        <p><b>Ne viene attratta</b> — ed è esattamente quello che è successo. È arrivato il giorno, nel suo cammino, in cui ha incontrato questa donna meravigliosa, questa anima così bella, capace di attrarre quella luce verso di sé — e da lì oggi possiamo essere testimoni di questa unione. Qualcosa di così meraviglioso: due anime fuse in una e, insieme a questo, anche la creazione di una vita — Mia.</p>
+        <p>Ne viene attratta — ed è esattamente quello che è successo. È arrivato il giorno, nel suo cammino, in cui ha incontrato questa donna meravigliosa, questa anima così bella, capace di attrarre quella luce verso di sé — e da lì oggi possiamo essere testimoni di questa unione. Qualcosa di così meraviglioso: due anime fuse in una e, insieme a questo, anche la creazione di una vita — Mia.</p>
 
         <p>Quindi, Giovanni, Alba: se la fisica ha ragione, non avete più scampo — la gravità non si discute. E sinceramente, meno male, perché io non voglio vivere in un mondo dove voi due non siete insieme.</p>
 
         <p>E allora sì, vi chiedo a tutti di unirvi a me alzando i calici, e concludo dicendo un'ultima cosa:</p>
 
-        <p class="finale">Per un'eternità di felicità, amore e prosperità... e che continuiate a essere luce, illuminando le nostre vite.</p>
+        <p class="finale" id="toast-it">Per un'eternità di felicità, amore e prosperità... e che continuiate a essere luce, illuminando le nostre vite.</p>
 
         <p class="pausa">(alzano i calici)</p>
 
-        <p class="finale">Vi amiamo tanto, salute! 🥂</p>
+        <p class="finale" id="final-it">Vi amiamo tanto, salute! 🥂</p>
       </div>
 
       <footer>
@@ -234,7 +325,7 @@
       </header>
 
       <div class="note">
-        El discurso se pronunciará <strong>en español</strong>. Esta página contiene el texto original, para leer <strong>con calma, cuando prefieran</strong> — antes, durante o después.
+        El discurso se pronunciará <strong>en español</strong>. Esta página contiene el texto original, para leer <strong>con calma, cuando prefieran</strong> — antes, durante o después. Sin actualizaciones en vivo: el texto ya está completo aquí.
       </div>
 
       <div class="divider"></div>
@@ -246,15 +337,15 @@
 
         <p>Y bueno, ¿por dónde empezamos?</p>
 
-        <p>Giovanni, ustedes lo conocen, ¿no? Es de esas personas que si lo dejas solo cinco minutos en cualquier lado, cuando vuelves ya se hizo amigo de todo el mundo — hasta del mesero, hasta del perro de la casa. Yo creo que ni él sabe cómo lo hace. Y no se dejen engañar por la estatura pequeña que tiene, porque está lleno de energía, lleno de algo que podríamos definir como <b>vida</b> o, mejor dicho, como <b>luz</b> — ¿no les parece? Lo conozco desde hace toda una vida, llevamos muchos años juntos, además de un montón de anécdotas que aquí no les voy a contar (uno nunca sabe si hay policía por ahí cerca), pero se las pueden imaginar solo con verle la chaqueta que tiene puesta.</p>
+        <p>Giovanni, ustedes lo conocen, ¿no? Es de esas personas que si lo dejas solo cinco minutos en cualquier lado, cuando vuelves ya se hizo amigo de todo el mundo — hasta del mesero, hasta del perro de la casa. Yo creo que ni él sabe cómo lo hace. Y no se dejen engañar por la estatura pequeña que tiene, porque está lleno de energía, lleno de algo que podríamos definir como vida o, mejor dicho, como luz — ¿no les parece? Lo conozco desde hace toda una vida, llevamos muchos años juntos, además de un montón de anécdotas que aquí no les voy a contar (uno nunca sabe si hay policía por ahí cerca), pero se las pueden imaginar solo con verle la chaqueta que tiene puesta.</p>
 
         <p>Hemos pasado momentos muy lindos juntos, rodeados de buenos amigos que se han convertido en familia —</p>
         <p class="pausa">(pausa)</p>
         <p>— algo que llevo siempre en el corazón y que, pienso, es parte de todo lo que somos, ¿cierto?</p>
 
-        <p>Y aunque hemos tomado caminos diferentes en la vida, los dos siempre hemos ido buscando lo mismo: ser fieles a nosotros mismos. Ahora, tranquilos, no se me asusten — no vine aquí a dar clase, se los prometo. Pero denme un segundo, porque hay un concepto de física que me parece que explica esto mejor que yo.</p>
+        <p>Y aunque hemos tomado caminos diferentes en la vida, los dos siempre hemos ido buscando lo mismo: ser fieles a nosotros mismos. Ahora, tranquilos, no se me asusten — no vine aquí a dar clase, se los prometo. Pero denme un segundo, porque hay algo de física que me parece que explica esto mejor que yo.</p>
 
-        <p><b>¿Qué le pasa a la energía, o a la luz, cuando se encuentra con una fuerza tan poderosa como la gravedad?</b></p>
+        <p>¿Qué le pasa a la energía, o a la luz, cuando se encuentra con una fuerza tan poderosa como la gravedad?</p>
         <p class="pausa">(pausa)</p>
 
         <p>Es atraída por ella — y eso es, básicamente, lo que pasó. Llegó el día, en su camino, en que encontró a esta mujer maravillosa, a esta alma tan linda, capaz de atraer esa luz hacia ella misma — y de ahí podemos hoy ser testigos de esa unión. Algo tan maravilloso: dos almas fundidas en una y, junto con eso, también, la creación de una vida — Mia.</p>
@@ -263,11 +354,11 @@
 
         <p>Así que ahora sí, quiero pedirles a todos que se unan a mí levantando las copas, y termino diciendo una última cosa:</p>
 
-        <p class="finale">Por una eternidad de felicidad, amor y prosperidad... y que sigan siendo luz, iluminando nuestras vidas.</p>
+        <p class="finale" id="toast-es">Por una eternidad de felicidad, amor y prosperidad... y que sigan siendo luz, iluminando nuestras vidas.</p>
 
         <p class="pausa">(levantan las copas)</p>
 
-        <p class="finale">¡Los amamos mucho, y salud! 🥂</p>
+        <p class="finale" id="final-es">¡Los amamos mucho, y salud! 🥂</p>
       </div>
 
       <footer>
@@ -286,12 +377,217 @@
       document.getElementById('btn-es').classList.toggle('active', !isIt);
       document.documentElement.lang = lang;
       try { localStorage.setItem('speechLang', lang); } catch (e) {}
+      observeRevealTargets();
     }
 
     (function initLang() {
       let saved = null;
       try { saved = localStorage.getItem('speechLang'); } catch (e) {}
       if (saved === 'es') setLang('es');
+    })();
+
+    let revealObserver = null;
+
+    function observeRevealTargets() {
+      if (!revealObserver) {
+        revealObserver = new IntersectionObserver((entries) => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting) {
+              entry.target.classList.add('in-view');
+              revealObserver.unobserve(entry.target);
+            }
+          });
+        }, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
+      }
+      document.querySelectorAll('.speech p:not(.in-view), footer:not(.in-view)').forEach(el => {
+        revealObserver.observe(el);
+      });
+    }
+
+    observeRevealTargets();
+
+    // ===== Confetti burst on reaching the toast line =====
+    (function () {
+      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (reduceMotion) return;
+
+      const canvas = document.getElementById('confetti-canvas');
+      const ctx = canvas.getContext('2d');
+      let particles = [];
+      let animId = null;
+      const colors = ['#a8823c', '#cfae6f', '#2b241d', '#e3d9c4', '#ffffff'];
+
+      function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      }
+      resizeCanvas();
+      window.addEventListener('resize', resizeCanvas);
+
+      function spawnBurst(shape) {
+        shape = shape || 'confetti';
+        const count = shape === 'heart' ? 70 : 140;
+        for (let i = 0; i < count; i++) {
+          particles.push({
+            x: Math.random() * canvas.width,
+            y: -20 - Math.random() * canvas.height * 0.3,
+            w: shape === 'heart' ? (10 + Math.random() * 6) : (6 + Math.random() * 6),
+            h: shape === 'heart' ? (10 + Math.random() * 6) : (8 + Math.random() * 10),
+            color: colors[Math.floor(Math.random() * colors.length)],
+            speedY: shape === 'heart' ? (1.2 + Math.random() * 1.6) : (2 + Math.random() * 3),
+            speedX: (Math.random() - 0.5) * 2.5,
+            rotation: Math.random() * 360,
+            rotationSpeed: (Math.random() - 0.5) * 8,
+            opacity: 1,
+            sway: Math.random() * Math.PI * 2,
+            shape: shape
+          });
+        }
+        if (!animId) animate();
+      }
+
+      function drawHeart(ctx, size) {
+        const s = size / 10;
+        ctx.beginPath();
+        ctx.moveTo(0, 3 * s);
+        ctx.bezierCurveTo(-5 * s, -2 * s, -5 * s, -6 * s, 0, -3 * s);
+        ctx.bezierCurveTo(5 * s, -6 * s, 5 * s, -2 * s, 0, 3 * s);
+        ctx.fill();
+      }
+
+      function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particles.forEach(p => {
+          p.y += p.speedY;
+          p.sway += 0.05;
+          p.x += p.speedX + Math.sin(p.sway) * 0.8;
+          p.rotation += p.rotationSpeed;
+          if (p.y > canvas.height * 0.85) {
+            p.opacity -= 0.02;
+          }
+          ctx.save();
+          ctx.globalAlpha = Math.max(p.opacity, 0);
+          ctx.translate(p.x, p.y);
+          ctx.rotate((p.rotation * Math.PI) / 180);
+          ctx.fillStyle = p.color;
+          if (p.shape === 'heart') {
+            drawHeart(ctx, p.w);
+          } else {
+            ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+          }
+          ctx.restore();
+        });
+        particles = particles.filter(p => p.opacity > 0 && p.y < canvas.height + 40);
+        if (particles.length > 0) {
+          animId = requestAnimationFrame(animate);
+        } else {
+          animId = null;
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+      }
+
+      const toastObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            spawnBurst();
+            toastObserver.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.6 });
+
+      ['toast-it', 'toast-es'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) toastObserver.observe(el);
+      });
+
+      const finalObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            spawnBurst('heart');
+            finalObserver.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.6 });
+
+      ['final-it', 'final-es'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) finalObserver.observe(el);
+      });
+    })();
+
+    // ===== Background gradient shift on scroll =====
+    (function () {
+      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (reduceMotion) return;
+
+      const startColor = [250, 246, 239];   // #faf6ef
+      const endColor = [237, 225, 202];     // soft deeper cream toward gold
+
+      function lerp(a, b, t) { return a + (b - a) * t; }
+
+      function updateBackground() {
+        const scrollTop = window.scrollY;
+        const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+        const t = docHeight > 0 ? Math.min(scrollTop / docHeight, 1) : 0;
+        const r = Math.round(lerp(startColor[0], endColor[0], t));
+        const g = Math.round(lerp(startColor[1], endColor[1], t));
+        const b = Math.round(lerp(startColor[2], endColor[2], t));
+        document.body.style.background = `rgb(${r}, ${g}, ${b})`;
+      }
+
+      window.addEventListener('scroll', updateBackground, { passive: true });
+      updateBackground();
+    })();
+
+    // ===== Divider parallax =====
+    (function () {
+      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (reduceMotion) return;
+
+      function updateParallax() {
+        const dividers = document.querySelectorAll('.divider');
+        dividers.forEach(div => {
+          const rect = div.getBoundingClientRect();
+          const centerOffset = rect.top + rect.height / 2 - window.innerHeight / 2;
+          const shift = centerOffset * -0.06;
+          div.style.transform = `translateY(${shift}px)`;
+        });
+      }
+
+      window.addEventListener('scroll', updateParallax, { passive: true });
+      updateParallax();
+    })();
+
+    // ===== Sparkle trail on cursor / tap =====
+    (function () {
+      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (reduceMotion) return;
+
+      let lastSpark = 0;
+      const throttleMs = 60;
+
+      function spawnSparkle(x, y) {
+        const now = Date.now();
+        if (now - lastSpark < throttleMs) return;
+        lastSpark = now;
+
+        const el = document.createElement('div');
+        el.className = 'sparkle';
+        el.style.left = (x - 3) + 'px';
+        el.style.top = (y - 3) + 'px';
+        document.body.appendChild(el);
+        setTimeout(() => el.remove(), 700);
+      }
+
+      window.addEventListener('pointermove', (e) => {
+        spawnSparkle(e.clientX, e.clientY);
+      }, { passive: true });
+
+      window.addEventListener('touchmove', (e) => {
+        if (e.touches && e.touches[0]) {
+          spawnSparkle(e.touches[0].clientX, e.touches[0].clientY);
+        }
+      }, { passive: true });
     })();
   </script>
 </body>
