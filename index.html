@@ -385,11 +385,29 @@
     background: #fff;
     border: 1px solid var(--line);
     box-shadow: 0 4px 16px rgba(43, 36, 29, 0.08);
-    display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
     font-size: 17px;
+    display: none;
+    opacity: 0;
+    animation: none;
+  }
+
+  .settings-btn.unlocked {
+    display: flex;
+    animation: fadeUp 0.4s ease-out forwards;
+  }
+
+  /* Invisible tap-target in the top-left corner to reveal settings (5 taps within 2s) */
+  .secret-zone {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 70px;
+    height: 70px;
+    z-index: 99;
+    background: transparent;
   }
 
   .settings-overlay {
@@ -538,7 +556,8 @@
   <canvas id="confetti-canvas" aria-hidden="true"></canvas>
   <div id="progress-bar"></div>
 
-  <button class="settings-btn" onclick="openSettings()" aria-label="Impostazioni tempi">⚙️</button>
+  <div class="secret-zone" id="secret-zone"></div>
+  <button class="settings-btn" id="settings-btn" onclick="openSettings()" aria-label="Impostazioni tempi">⚙️</button>
 
   <div class="settings-overlay" id="settings-overlay" onclick="if(event.target===this) closeSettings()">
     <div class="settings-panel">
@@ -726,6 +745,40 @@
     function currentLangKey() {
       return document.getElementById('btn-it').classList.contains('active') ? 'it' : 'es';
     }
+
+    // ===== Secret unlock: 5 taps on top-left corner within 2 seconds =====
+    (function () {
+      const zone = document.getElementById('secret-zone');
+      const btn = document.getElementById('settings-btn');
+      let tapCount = 0;
+      let resetTimer = null;
+
+      function registerTap() {
+        tapCount++;
+        clearTimeout(resetTimer);
+        resetTimer = setTimeout(() => { tapCount = 0; }, 2000);
+
+        if (tapCount >= 5) {
+          tapCount = 0;
+          clearTimeout(resetTimer);
+          btn.classList.add('unlocked');
+          try { localStorage.setItem('settingsUnlocked', '1'); } catch (e) {}
+        }
+      }
+
+      zone.addEventListener('click', registerTap);
+      zone.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        registerTap();
+      }, { passive: false });
+
+      // Stay unlocked across visits on this device once revealed
+      try {
+        if (localStorage.getItem('settingsUnlocked') === '1') {
+          btn.classList.add('unlocked');
+        }
+      } catch (e) {}
+    })();
 
     function openSettings() {
       const langKey = currentLangKey();
