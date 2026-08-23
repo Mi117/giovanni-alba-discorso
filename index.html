@@ -4,6 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Discorso — Giovanni & Alba</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#2b241d">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="G & A">
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@400;500;600&display=swap');
 
@@ -13,13 +19,13 @@
     --gold: #a8823c;
     --gold-soft: #cfae6f;
     --line: #e3d9c4;
+    --font-scale: 1;
   }
 
   * { box-sizing: border-box; }
 
   body {
     margin: 0;
-    background: var(--cream);
     background: linear-gradient(180deg, #faf6ef 0%, #f7f1e6 50%, #f3ecdd 100%);
     background-attachment: fixed;
     color: var(--ink);
@@ -34,6 +40,17 @@
     margin: 0 auto;
     padding: 48px 24px 80px;
     position: relative;
+  }
+
+  #progress-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 3px;
+    width: 0%;
+    background: var(--gold);
+    z-index: 300;
+    transition: width 0.1s linear;
   }
 
   .lang-toggle {
@@ -148,30 +165,34 @@
     color: var(--ink);
   }
 
-  .speech p {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 21px;
-    margin: 0 0 22px;
-    opacity: 0;
-    transform: translateY(18px);
-    transition: opacity 0.7s ease-out, transform 0.7s ease-out;
+  .speech {
+    font-size: calc(21px * var(--font-scale));
   }
 
-  .speech p.in-view {
+  .speech p {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1em;
+    margin: 0 0 22px;
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  .speech p.shown {
     opacity: 1;
     transform: translateY(0);
+    transition: opacity 1s ease-out, transform 1s ease-out;
   }
 
   .speech p.pausa {
     text-align: center;
     font-style: italic;
     color: var(--gold);
-    font-size: 17px;
+    font-size: 0.81em;
     margin: -6px 0 22px;
-    transition: opacity 0.7s ease-out, transform 0.7s ease-out, letter-spacing 0.9s ease-out 0.15s;
   }
 
-  .speech p.pausa.in-view {
+  .speech p.pausa.shown {
+    transition: opacity 1s ease-out, transform 1s ease-out, letter-spacing 1.2s ease-out 0.2s;
     letter-spacing: 0.06em;
   }
 
@@ -196,7 +217,7 @@
     transition: opacity 0.7s ease-out, transform 0.7s ease-out;
   }
 
-  footer.in-view {
+  footer.shown {
     opacity: 1;
     transform: translateY(0);
   }
@@ -240,9 +261,266 @@
     to   { opacity: 0; transform: scale(0.3) translateY(-14px); }
   }
 
+  /* ===== Font size control ===== */
+  .font-controls {
+    position: fixed;
+    bottom: 20px;
+    left: 90px;
+    z-index: 99;
+    display: flex;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    box-shadow: 0 4px 16px rgba(43, 36, 29, 0.08);
+    overflow: hidden;
+  }
+
+  .font-btn {
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
+    border: none;
+    background: transparent;
+    color: var(--ink);
+    padding: 10px 14px;
+    cursor: pointer;
+    font-size: 15px;
+  }
+
+  .font-btn:first-child {
+    border-right: 1px solid var(--line);
+  }
+
+  /* ===== Swipe hint ===== */
+  .swipe-hint {
+    position: fixed;
+    bottom: 70px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--ink);
+    color: var(--cream);
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    padding: 8px 16px;
+    border-radius: 999px;
+    z-index: 99;
+    opacity: 0;
+    transition: opacity 0.4s ease-out;
+    pointer-events: none;
+    white-space: nowrap;
+  }
+
+  .swipe-hint.show {
+    opacity: 1;
+  }
+
+  /* ===== Add to Home Screen icon (morphs to download icon) ===== */
+  .a2hs-btn {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    z-index: 99;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: #fff;
+    border: 1px solid var(--line);
+    box-shadow: 0 4px 16px rgba(43, 36, 29, 0.08);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.3s ease-out, background 0.3s ease-out;
+  }
+
+  .a2hs-btn svg {
+    width: 20px;
+    height: 20px;
+    stroke: var(--ink);
+    fill: none;
+    stroke-width: 1.8;
+    transition: opacity 0.25s ease-out;
+  }
+
+  .a2hs-btn.morphed {
+    background: var(--ink);
+  }
+
+  .a2hs-btn.morphed svg {
+    stroke: var(--cream);
+  }
+
+  .a2hs-tooltip {
+    position: fixed;
+    bottom: 70px;
+    left: 20px;
+    max-width: 260px;
+    background: var(--ink);
+    color: var(--cream);
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    z-index: 98;
+    opacity: 0;
+    transform: translateY(6px);
+    transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+    pointer-events: none;
+  }
+
+  .a2hs-tooltip.show {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+
+  /* ===== Timing settings panel ===== */
+  .settings-btn {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    z-index: 100;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #fff;
+    border: 1px solid var(--line);
+    box-shadow: 0 4px 16px rgba(43, 36, 29, 0.08);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 17px;
+  }
+
+  .settings-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(43, 36, 29, 0.35);
+    z-index: 400;
+    display: none;
+    align-items: flex-end;
+    justify-content: center;
+  }
+
+  .settings-overlay.show {
+    display: flex;
+  }
+
+  .settings-panel {
+    background: var(--cream);
+    width: 100%;
+    max-width: 640px;
+    max-height: 82vh;
+    border-radius: 20px 20px 0 0;
+    padding: 20px 20px calc(20px + env(safe-area-inset-bottom, 0px));
+    overflow-y: auto;
+    font-family: 'Inter', sans-serif;
+  }
+
+  .settings-panel h2 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 24px;
+    margin: 0 0 4px;
+    color: var(--ink);
+  }
+
+  .settings-panel .settings-sub {
+    font-size: 13px;
+    color: #6b6152;
+    margin: 0 0 18px;
+  }
+
+  .settings-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .settings-row-text {
+    flex: 1;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 15px;
+    color: var(--ink);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .settings-row-num {
+    font-family: 'Inter', sans-serif;
+    font-size: 11px;
+    color: var(--gold);
+    font-weight: 600;
+    width: 20px;
+    flex-shrink: 0;
+  }
+
+  .settings-row input[type="number"] {
+    width: 56px;
+    text-align: center;
+    padding: 6px 4px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    background: #fff;
+    color: var(--ink);
+  }
+
+  .settings-row-unit {
+    font-size: 12px;
+    color: #a39a89;
+    flex-shrink: 0;
+  }
+
+  .settings-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 18px;
+    position: sticky;
+    bottom: 0;
+    background: var(--cream);
+    padding-top: 10px;
+  }
+
+  .settings-actions button {
+    flex: 1;
+    padding: 12px;
+    border-radius: 999px;
+    border: none;
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+  }
+
+  .settings-save {
+    background: var(--ink);
+    color: var(--cream);
+  }
+
+  .settings-reset {
+    background: #fff;
+    border: 1px solid var(--line) !important;
+    color: var(--ink);
+  }
+
+  .settings-close {
+    position: absolute;
+    top: 14px;
+    right: 16px;
+    background: none;
+    border: none;
+    font-size: 20px;
+    color: var(--ink);
+    cursor: pointer;
+  }
+
   @media (max-width: 420px) {
     h1 { font-size: 34px; }
-    .speech p { font-size: 19px; }
+    .font-controls { left: 76px; }
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -258,29 +536,65 @@
 </head>
 <body>
   <canvas id="confetti-canvas" aria-hidden="true"></canvas>
+  <div id="progress-bar"></div>
+
+  <button class="settings-btn" onclick="openSettings()" aria-label="Impostazioni tempi">⚙️</button>
+
+  <div class="settings-overlay" id="settings-overlay" onclick="if(event.target===this) closeSettings()">
+    <div class="settings-panel">
+      <button class="settings-close" onclick="closeSettings()">✕</button>
+      <h2>Tempi di comparsa del testo</h2>
+      <p class="settings-sub">Imposta quanti secondi restano visibili prima che appaia il paragrafo successivo (in base alla lingua attiva).</p>
+      <div id="settings-list"></div>
+      <div class="settings-actions">
+        <button class="settings-reset" onclick="resetDurations()">Ripristina (12s)</button>
+        <button class="settings-save" onclick="applyDurations()">Salva e riavvia</button>
+      </div>
+    </div>
+  </div>
 
   <div class="lang-toggle" role="group" aria-label="Selezione lingua / Selección de idioma">
     <button class="lang-btn active" id="btn-it" onclick="setLang('it')">IT</button>
     <button class="lang-btn" id="btn-es" onclick="setLang('es')">ES</button>
   </div>
 
+  <button class="a2hs-btn" id="a2hs-btn" onclick="handleA2HS()" aria-label="Aggiungi alla schermata Home">
+    <svg id="a2hs-icon-home" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <path d="M12 3l8 7h-2.5v9h-11v-9H4l8-7z" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M9 19v-5h6v5" stroke-linejoin="round" stroke-linecap="round"/>
+    </svg>
+    <svg id="a2hs-icon-download" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="display:none; position:absolute;">
+      <path d="M12 3v12" stroke-linecap="round"/>
+      <path d="M7 11l5 5 5-5" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M4 19h16" stroke-linecap="round"/>
+    </svg>
+  </button>
+  <div class="a2hs-tooltip" id="a2hs-tooltip">💡 Aggiungi alla schermata Home per un accesso più comodo</div>
+
+  <div class="font-controls">
+    <button class="font-btn" onclick="changeFontSize(-1)" aria-label="Riduci testo">A−</button>
+    <button class="font-btn" onclick="changeFontSize(1)" aria-label="Ingrandisci testo">A+</button>
+  </div>
+
+  <div class="swipe-hint" id="swipe-hint">← Scorri per cambiare lingua →</div>
+
   <div class="wrap">
 
     <!-- ===== ITALIAN VERSION ===== -->
     <div id="lang-it">
       <header>
-        <div class="monogram">G &amp; A · 14 Agosto 2026</div>
+        <div class="monogram">Giovanni &amp; Alba · 29 Agosto 2026</div>
         <h1>Il discorso, <em>in italiano</em></h1>
         <p class="subtitle">Per chi preferisce seguirlo nella propria lingua</p>
       </header>
 
       <div class="note">
-        Il discorso sarà pronunciato <strong>in spagnolo</strong>. Questa pagina contiene la traduzione italiana, da leggere <strong>con calma, quando preferite</strong> — prima, durante o dopo. Nessun aggiornamento in diretta: il testo è già tutto qui.
+        Il discorso sarà pronunciato <strong>in spagnolo</strong>. Questa pagina contiene la traduzione italiana. Il testo apparirà gradualmente, al ritmo del discorso.
       </div>
 
       <div class="divider"></div>
 
-      <div class="speech">
+      <div class="speech" id="speech-it">
         <p>Signore e signori, buongiorno a tutti. Prima di tutto, vi ringrazio moltissimo per essere qui, e soprattutto voglio ringraziare gli sposi per l'onore di essere qui in questo giorno così speciale. Vi chiedo solo di regalarmi qualche minuto del vostro prezioso tempo per raccontarvi qualcosa.</p>
 
         <p>Prima di tutto voglio scusarmi, soprattutto con tutte le donne, perché quello che succederà nei prossimi minuti causerà qualche problema di trucco (io sarò il primo). Signori, nemmeno voi siete salvi. E a chi ha portato i fazzoletti, complimenti, avete fatto i compiti. A chi non li ha portati... beh, anche i tovaglioli del tavolo funzionano.</p>
@@ -319,18 +633,18 @@
     <!-- ===== SPANISH VERSION ===== -->
     <div id="lang-es" style="display:none;">
       <header>
-        <div class="monogram">G &amp; A · 14 Agosto 2026</div>
+        <div class="monogram">Giovanni &amp; Alba · 29 Agosto 2026</div>
         <h1>El discurso, <em>en español</em></h1>
         <p class="subtitle">Para quienes prefieren seguirlo en su propio idioma</p>
       </header>
 
       <div class="note">
-        El discurso se pronunciará <strong>en español</strong>. Esta página contiene el texto original, para leer <strong>con calma, cuando prefieran</strong> — antes, durante o después. Sin actualizaciones en vivo: el texto ya está completo aquí.
+        El discurso se pronunciará <strong>en español</strong>. Esta página contiene el texto original. El texto irá apareciendo gradualmente, al ritmo del discurso.
       </div>
 
       <div class="divider"></div>
 
-      <div class="speech">
+      <div class="speech" id="speech-es">
         <p>Damas y caballeros, muy buenos días a todos. Primero que todo, les agradezco muchísimo por estar aquí, y sobre todo quiero agradecerles a los recién casados por el honor de estar aquí en este día tan especial. Solamente les pido a todos ustedes que me regalen unos minutos de su valioso tiempo para poder contarles algo.</p>
 
         <p>Primero que todo quiero pedirles disculpas, sobre todo a todas las mujeres, porque lo que va a pasar en los próximos minutos les va a causar problemas de maquillaje (yo seré el primero). Caballeros, ustedes tampoco se escapan. Y a los que trajeron pañuelos, felicidades, hicieron la tarea. A los que no... bueno, las servilletas de la mesa también sirven.</p>
@@ -377,7 +691,7 @@
       document.getElementById('btn-es').classList.toggle('active', !isIt);
       document.documentElement.lang = lang;
       try { localStorage.setItem('speechLang', lang); } catch (e) {}
-      observeRevealTargets();
+      startTimedReveal();
     }
 
     (function initLang() {
@@ -386,142 +700,264 @@
       if (saved === 'es') setLang('es');
     })();
 
-    let revealObserver = null;
+    // ===== Timed paragraph reveal (default 12s per paragraph, customizable) =====
+    let revealTimers = [];
+    const DEFAULT_SECONDS_PER_PARAGRAPH = 12;
 
-    function observeRevealTargets() {
-      if (!revealObserver) {
-        revealObserver = new IntersectionObserver((entries) => {
-          entries.forEach(entry => {
-            if (entry.isIntersecting) {
-              entry.target.classList.add('in-view');
-              revealObserver.unobserve(entry.target);
-            }
-          });
-        }, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
+    function getDurations(langKey, count) {
+      let durations = null;
+      try {
+        const saved = localStorage.getItem('durations_' + langKey);
+        if (saved) durations = JSON.parse(saved);
+      } catch (e) {}
+      if (!durations || durations.length !== count) {
+        durations = new Array(count).fill(DEFAULT_SECONDS_PER_PARAGRAPH);
       }
-      document.querySelectorAll('.speech p:not(.in-view), footer:not(.in-view)').forEach(el => {
-        revealObserver.observe(el);
-      });
+      return durations;
     }
 
-    observeRevealTargets();
+    function saveDurations(langKey, durations) {
+      try {
+        localStorage.setItem('durations_' + langKey, JSON.stringify(durations));
+      } catch (e) {}
+    }
 
-    // ===== Confetti burst on reaching the toast line =====
+    // ===== Settings panel (custom per-paragraph timing) =====
+    function currentLangKey() {
+      return document.getElementById('btn-it').classList.contains('active') ? 'it' : 'es';
+    }
+
+    function openSettings() {
+      const langKey = currentLangKey();
+      const speechEl = document.getElementById(langKey === 'it' ? 'speech-it' : 'speech-es');
+      const paragraphs = Array.from(speechEl.querySelectorAll('p'));
+      const durations = getDurations(langKey, paragraphs.length);
+
+      const list = document.getElementById('settings-list');
+      list.innerHTML = '';
+
+      paragraphs.forEach((p, i) => {
+        const preview = p.textContent.trim().slice(0, 46) + (p.textContent.trim().length > 46 ? '…' : '');
+        const row = document.createElement('div');
+        row.className = 'settings-row';
+        row.innerHTML = `
+          <span class="settings-row-num">${i + 1}</span>
+          <span class="settings-row-text">${preview}</span>
+          <input type="number" min="1" max="60" step="1" value="${durations[i]}" data-index="${i}">
+          <span class="settings-row-unit">sec</span>
+        `;
+        list.appendChild(row);
+      });
+
+      document.getElementById('settings-overlay').classList.add('show');
+    }
+
+    function closeSettings() {
+      document.getElementById('settings-overlay').classList.remove('show');
+    }
+
+    function applyDurations() {
+      const langKey = currentLangKey();
+      const inputs = document.querySelectorAll('#settings-list input[type="number"]');
+      const durations = Array.from(inputs).map(inp => {
+        const v = parseFloat(inp.value);
+        return isNaN(v) || v <= 0 ? DEFAULT_SECONDS_PER_PARAGRAPH : v;
+      });
+      saveDurations(langKey, durations);
+      closeSettings();
+      startTimedReveal();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function resetDurations() {
+      const langKey = currentLangKey();
+      try { localStorage.removeItem('durations_' + langKey); } catch (e) {}
+      openSettings();
+    }
+
+    function startTimedReveal() {
+      revealTimers.forEach(t => clearTimeout(t));
+      revealTimers = [];
+
+      const isIt = document.getElementById('btn-it').classList.contains('active');
+      const langKey = isIt ? 'it' : 'es';
+      const speechEl = document.getElementById(isIt ? 'speech-it' : 'speech-es');
+      const footerEl = speechEl.closest('#lang-it, #lang-es').querySelector('footer');
+
+      const paragraphs = Array.from(speechEl.querySelectorAll('p'));
+      paragraphs.forEach(p => p.classList.remove('shown'));
+      if (footerEl) footerEl.classList.remove('shown');
+
+      const durations = getDurations(langKey, paragraphs.length);
+
+      let delay = 400;
+      paragraphs.forEach((p, i) => {
+        const timer = setTimeout(() => {
+          p.classList.add('shown');
+          triggerHaptic();
+          checkSpecialBursts(p);
+        }, delay);
+        revealTimers.push(timer);
+        const secs = durations[i] != null ? durations[i] : DEFAULT_SECONDS_PER_PARAGRAPH;
+        delay += secs * 1000;
+      });
+
+      if (footerEl) {
+        const footerTimer = setTimeout(() => {
+          footerEl.classList.add('shown');
+        }, delay);
+        revealTimers.push(footerTimer);
+      }
+
+      startA2HSMorph(400);
+    }
+
+    function checkSpecialBursts(p) {
+      if (p.id === 'toast-it' || p.id === 'toast-es') spawnConfettiBurst('confetti');
+      if (p.id === 'final-it' || p.id === 'final-es') spawnConfettiBurst('heart');
+    }
+
+    // ===== Haptic feedback =====
+    function triggerHaptic() {
+      try {
+        if (navigator.vibrate) {
+          navigator.vibrate(15);
+        }
+      } catch (e) {}
+    }
+
+    // ===== Reading progress bar =====
     (function () {
-      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      if (reduceMotion) return;
-
-      const canvas = document.getElementById('confetti-canvas');
-      const ctx = canvas.getContext('2d');
-      let particles = [];
-      let animId = null;
-      const colors = ['#a8823c', '#cfae6f', '#2b241d', '#e3d9c4', '#ffffff'];
-
-      function resizeCanvas() {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
+      const bar = document.getElementById('progress-bar');
+      function updateProgress() {
+        const scrollTop = window.scrollY;
+        const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+        const pct = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+        bar.style.width = Math.min(Math.max(pct, 0), 100) + '%';
       }
-      resizeCanvas();
-      window.addEventListener('resize', resizeCanvas);
-
-      function spawnBurst(shape) {
-        shape = shape || 'confetti';
-        const count = shape === 'heart' ? 70 : 140;
-        for (let i = 0; i < count; i++) {
-          particles.push({
-            x: Math.random() * canvas.width,
-            y: -20 - Math.random() * canvas.height * 0.3,
-            w: shape === 'heart' ? (10 + Math.random() * 6) : (6 + Math.random() * 6),
-            h: shape === 'heart' ? (10 + Math.random() * 6) : (8 + Math.random() * 10),
-            color: colors[Math.floor(Math.random() * colors.length)],
-            speedY: shape === 'heart' ? (1.2 + Math.random() * 1.6) : (2 + Math.random() * 3),
-            speedX: (Math.random() - 0.5) * 2.5,
-            rotation: Math.random() * 360,
-            rotationSpeed: (Math.random() - 0.5) * 8,
-            opacity: 1,
-            sway: Math.random() * Math.PI * 2,
-            shape: shape
-          });
-        }
-        if (!animId) animate();
-      }
-
-      function drawHeart(ctx, size) {
-        const s = size / 10;
-        ctx.beginPath();
-        ctx.moveTo(0, 3 * s);
-        ctx.bezierCurveTo(-5 * s, -2 * s, -5 * s, -6 * s, 0, -3 * s);
-        ctx.bezierCurveTo(5 * s, -6 * s, 5 * s, -2 * s, 0, 3 * s);
-        ctx.fill();
-      }
-
-      function animate() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        particles.forEach(p => {
-          p.y += p.speedY;
-          p.sway += 0.05;
-          p.x += p.speedX + Math.sin(p.sway) * 0.8;
-          p.rotation += p.rotationSpeed;
-          if (p.y > canvas.height * 0.85) {
-            p.opacity -= 0.02;
-          }
-          ctx.save();
-          ctx.globalAlpha = Math.max(p.opacity, 0);
-          ctx.translate(p.x, p.y);
-          ctx.rotate((p.rotation * Math.PI) / 180);
-          ctx.fillStyle = p.color;
-          if (p.shape === 'heart') {
-            drawHeart(ctx, p.w);
-          } else {
-            ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
-          }
-          ctx.restore();
-        });
-        particles = particles.filter(p => p.opacity > 0 && p.y < canvas.height + 40);
-        if (particles.length > 0) {
-          animId = requestAnimationFrame(animate);
-        } else {
-          animId = null;
-          ctx.clearRect(0, 0, canvas.width, canvas.height);
-        }
-      }
-
-      const toastObserver = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting) {
-            spawnBurst();
-            toastObserver.unobserve(entry.target);
-          }
-        });
-      }, { threshold: 0.6 });
-
-      ['toast-it', 'toast-es'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) toastObserver.observe(el);
-      });
-
-      const finalObserver = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting) {
-            spawnBurst('heart');
-            finalObserver.unobserve(entry.target);
-          }
-        });
-      }, { threshold: 0.6 });
-
-      ['final-it', 'final-es'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) finalObserver.observe(el);
-      });
+      window.addEventListener('scroll', updateProgress, { passive: true });
+      updateProgress();
     })();
+
+    // ===== Font size control (verified working) =====
+    let fontScale = 1;
+    (function initFontScale() {
+      try {
+        const saved = localStorage.getItem('fontScale');
+        if (saved) fontScale = parseFloat(saved);
+      } catch (e) {}
+      document.documentElement.style.setProperty('--font-scale', fontScale);
+    })();
+
+    function changeFontSize(dir) {
+      fontScale = Math.max(0.75, Math.min(1.6, +(fontScale + dir * 0.1).toFixed(2)));
+      document.documentElement.style.setProperty('--font-scale', fontScale);
+      try { localStorage.setItem('fontScale', fontScale); } catch (e) {}
+    }
+
+    // ===== Swipe to switch language =====
+    (function () {
+      let touchStartX = null;
+      let touchStartY = null;
+      const hint = document.getElementById('swipe-hint');
+
+      window.addEventListener('touchstart', (e) => {
+        if (e.touches && e.touches[0]) {
+          touchStartX = e.touches[0].clientX;
+          touchStartY = e.touches[0].clientY;
+        }
+      }, { passive: true });
+
+      window.addEventListener('touchend', (e) => {
+        if (touchStartX === null) return;
+        const touch = e.changedTouches && e.changedTouches[0];
+        if (!touch) return;
+        const dx = touch.clientX - touchStartX;
+        const dy = touch.clientY - touchStartY;
+        if (Math.abs(dx) > 80 && Math.abs(dy) < 60) {
+          const isIt = document.getElementById('btn-it').classList.contains('active');
+          setLang(isIt ? 'es' : 'it');
+        }
+        touchStartX = null;
+        touchStartY = null;
+      }, { passive: true });
+
+      setTimeout(() => {
+        try {
+          if (localStorage.getItem('swipeHintSeen')) return;
+        } catch (e) {}
+        hint.classList.add('show');
+        setTimeout(() => {
+          hint.classList.remove('show');
+          try { localStorage.setItem('swipeHintSeen', '1'); } catch (e) {}
+        }, 2600);
+      }, 1800);
+    })();
+
+    // ===== Add to Home Screen icon: starts visible, morphs to download icon as text starts appearing =====
+    let a2hsMorphed = false;
+    let deferredInstallPrompt = null;
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredInstallPrompt = e;
+    });
+
+    function startA2HSMorph(afterMs) {
+      setTimeout(() => {
+        const btn = document.getElementById('a2hs-btn');
+        const homeIcon = document.getElementById('a2hs-icon-home');
+        const downloadIcon = document.getElementById('a2hs-icon-download');
+        if (!btn || a2hsMorphed) return;
+        a2hsMorphed = true;
+        btn.classList.add('morphed');
+        homeIcon.style.display = 'none';
+        downloadIcon.style.display = 'block';
+        downloadIcon.style.position = 'static';
+      }, afterMs);
+    }
+
+    function isIOS() {
+      return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    }
+
+    function handleA2HS() {
+      const tooltip = document.getElementById('a2hs-tooltip');
+
+      if (deferredInstallPrompt) {
+        deferredInstallPrompt.prompt();
+        deferredInstallPrompt.userChoice.finally(() => {
+          deferredInstallPrompt = null;
+        });
+        return;
+      }
+
+      if (isIOS()) {
+        tooltip.textContent = '📲 Tocca l\'icona Condividi ⬆️ in basso, poi "Aggiungi a Home"';
+      } else {
+        tooltip.textContent = '💡 Apri il menu del browser (⋮) e scegli "Aggiungi a schermata Home"';
+      }
+
+      tooltip.classList.toggle('show');
+      if (tooltip.classList.contains('show')) {
+        setTimeout(() => tooltip.classList.remove('show'), 6000);
+      }
+    }
+
+    // Register service worker for real installability (Android/Chrome)
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js').catch(() => {});
+      });
+    }
 
     // ===== Background gradient shift on scroll =====
     (function () {
       const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       if (reduceMotion) return;
 
-      const startColor = [250, 246, 239];   // #faf6ef
-      const endColor = [237, 225, 202];     // soft deeper cream toward gold
+      const startColor = [250, 246, 239];
+      const endColor = [237, 225, 202];
 
       function lerp(a, b, t) { return a + (b - a) * t; }
 
@@ -589,6 +1025,90 @@
         }
       }, { passive: true });
     })();
+
+    // ===== Confetti / heart burst engine =====
+    const confettiCanvas = document.getElementById('confetti-canvas');
+    const confettiCtx = confettiCanvas.getContext('2d');
+    let confettiParticles = [];
+    let confettiAnimId = null;
+    const confettiColors = ['#a8823c', '#cfae6f', '#2b241d', '#e3d9c4', '#ffffff'];
+
+    function resizeConfettiCanvas() {
+      confettiCanvas.width = window.innerWidth;
+      confettiCanvas.height = window.innerHeight;
+    }
+    resizeConfettiCanvas();
+    window.addEventListener('resize', resizeConfettiCanvas);
+
+    function drawHeart(ctx, size) {
+      const s = size / 10;
+      ctx.beginPath();
+      ctx.moveTo(0, 3 * s);
+      ctx.bezierCurveTo(-5 * s, -2 * s, -5 * s, -6 * s, 0, -3 * s);
+      ctx.bezierCurveTo(5 * s, -6 * s, 5 * s, -2 * s, 0, 3 * s);
+      ctx.fill();
+    }
+
+    function spawnConfettiBurst(shape) {
+      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (reduceMotion) return;
+
+      shape = shape || 'confetti';
+      const count = shape === 'heart' ? 70 : 140;
+      for (let i = 0; i < count; i++) {
+        confettiParticles.push({
+          x: Math.random() * confettiCanvas.width,
+          y: -20 - Math.random() * confettiCanvas.height * 0.3,
+          w: shape === 'heart' ? (10 + Math.random() * 6) : (6 + Math.random() * 6),
+          h: shape === 'heart' ? (10 + Math.random() * 6) : (8 + Math.random() * 10),
+          color: confettiColors[Math.floor(Math.random() * confettiColors.length)],
+          speedY: shape === 'heart' ? (1.2 + Math.random() * 1.6) : (2 + Math.random() * 3),
+          speedX: (Math.random() - 0.5) * 2.5,
+          rotation: Math.random() * 360,
+          rotationSpeed: (Math.random() - 0.5) * 8,
+          opacity: 1,
+          sway: Math.random() * Math.PI * 2,
+          shape: shape
+        });
+      }
+      if (!confettiAnimId) animateConfetti();
+    }
+
+    function animateConfetti() {
+      confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+      confettiParticles.forEach(p => {
+        p.y += p.speedY;
+        p.sway += 0.05;
+        p.x += p.speedX + Math.sin(p.sway) * 0.8;
+        p.rotation += p.rotationSpeed;
+        if (p.y > confettiCanvas.height * 0.85) {
+          p.opacity -= 0.02;
+        }
+        confettiCtx.save();
+        confettiCtx.globalAlpha = Math.max(p.opacity, 0);
+        confettiCtx.translate(p.x, p.y);
+        confettiCtx.rotate((p.rotation * Math.PI) / 180);
+        confettiCtx.fillStyle = p.color;
+        if (p.shape === 'heart') {
+          drawHeart(confettiCtx, p.w);
+        } else {
+          confettiCtx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+        }
+        confettiCtx.restore();
+      });
+      confettiParticles = confettiParticles.filter(p => p.opacity > 0 && p.y < confettiCanvas.height + 40);
+      if (confettiParticles.length > 0) {
+        confettiAnimId = requestAnimationFrame(animateConfetti);
+      } else {
+        confettiAnimId = null;
+        confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+      }
+    }
+
+    // ===== Kick off on load =====
+    window.addEventListener('DOMContentLoaded', () => {
+      startTimedReveal();
+    });
   </script>
 </body>
 </html>
