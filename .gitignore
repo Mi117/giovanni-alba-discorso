@@ -1,0 +1,12 @@
+# Source assets (large vector/raster files)
+torus-various-projections-transparent-background-gold-realictick-3d-torus-model-icons/
+
+# OS files
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Editor files
+*.swp
+*.swo
+*~
