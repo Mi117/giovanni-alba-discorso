@@ -1,20 +1,20 @@
 <!DOCTYPE html>
 <!--
-  index-v16 - Giovanni & Alba wedding speech page
-  CHANGES vs v15:
-   - SENTENCE-BY-SENTENCE FADE (replaces word-by-word): each sentence of a
-     paragraph fades in with a calm pure-soft-fade (no drift), instead of the
-     choppy per-word effect. Reads more naturally for a live wedding speech.
-   - Pacing: sentences are revealed to finish exactly when that paragraph's
-     duration window ends, so the overall timing schedule is UNCHANGED (same
-     delays and durations from settings.json / localStorage / hardcoded fallback).
-   - Excluded: (pausa) markers appear whole. Names inside .name-flourish spans
-     stay intact (not split).
-   - v15+ retained: hardcoded final timing fallback, network-first HTML shell
-     in sw.js, central settings.json sync, "Applica" + "Esporta/Copia JSON",
-     default 15s first-paragraph delay, tabbed settings, living pulse rings.
-  REVERT: word-by-word version is in index-v15b_word-fade-backup.html; v14
-  pre-fade version in index-v14*.html. To revert, copy that file over this one.
+  index-v15 - Giovanni & Alba wedding speech page
+  CHANGES vs v14:
+   - WORD-BY-WORD FADE: speech paragraphs no longer appear whole; each word
+     fades in individually (soft fade + slight upward lift) to resemble a
+     live spoken delivery.
+   - Pacing: words are revealed to finish exactly when that paragraph's
+     duration window ends, so the overall timing schedule is UNCHANGED
+     (same delays and durations from settings.json / localStorage).
+   - Excluded: (pausa) markers appear whole; normal + toast/final lines get
+     the effect. Names inside .name-flourish spans stay intact (not split).
+   - v14 retained: central settings.json sync (remote -> localStorage ->
+     defaults), "Applica" + "Esporta/Copia JSON" buttons, default 15s
+     first-paragraph delay, tabbed settings, living pulse rings, hideable gear.
+  REVERT: previous complete version is in index-v14*.html; to revert, copy
+  that file's content over docs/index.html.
 -->
 <html lang="it">
 <head>
@@ -202,18 +202,21 @@
     transition: opacity 1s ease-out, transform 1s ease-out;
   }
 
-  /* Sentence-by-sentence fade (v16): each sentence fades in softly, no drift */
-  .speech p .sentence {
+  /* Word-by-word fade (v15): each token fades in with a soft lift */
+  .speech p .word {
     opacity: 0;
-    transition: opacity 0.8s ease-out;
-    will-change: opacity;
+    display: inline-block;
+    transform: translateY(4px);
+    transition: opacity 0.45s ease-out, transform 0.45s ease-out;
+    will-change: opacity, transform;
   }
 
-  .speech p.shown .sentence.lit {
+  .speech p.shown .word.lit {
     opacity: 1;
+    transform: translateY(0);
   }
 
-  .speech p .sentence.flourish-name {
+  .speech p .word.flourish-name {
     white-space: nowrap;
   }
 
@@ -224,7 +227,13 @@
     font-size: 0.81em;
     margin: -6px 0 22px;
   }
- /* pausa lines are NOT sentence-split; .sentence rules above do not apply to them */
+ /* pausa lines are NOT word-split; .word rules above do not apply to them */
+    text-align: center;
+    font-style: italic;
+    color: var(--gold);
+    font-size: 0.81em;
+    margin: -6px 0 22px;
+  }
 
   .speech p.pausa.shown {
     transition: opacity 1s ease-out, transform 1s ease-out, letter-spacing 1.2s ease-out 0.2s;
@@ -801,7 +810,7 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .monogram, h1, .subtitle, .note, .speech p, footer, #lang-it, #lang-es, .divider, .speech p .sentence {
+    .monogram, h1, .subtitle, .note, .speech p, footer, #lang-it, #lang-es, .divider, .speech p .word {
       animation: none !important;
       transition: none !important;
       opacity: 1 !important;
@@ -1587,39 +1596,35 @@
       closeSettings();
     }
 
-    // Wrap each sentence of a non-pausa paragraph in <span class="sentence"> so
-    // sentences fade in one by one. Names inside .name-flourish are kept as a
+    // Wrap each word of a non-pausa paragraph in <span class="word"> so words
+    // can be faded in one by one. Names inside .name-flourish are kept as a
     // single unit so their underline-flourish logic still works.
-    // Idempotent: skips paragraphs already carrying a data-sentencesplit flag.
-    function splitParagraphsIntoSentences(container) {
+    // Idempotent: skips paragraphs already carrying a data-wordsplit flag.
+    function splitParagraphsIntoWords(container) {
       const paras = Array.from(container.querySelectorAll('p')).filter(p => {
-        return !p.classList.contains('pausa') && !p.dataset.sentencesplit;
+        return !p.classList.contains('pausa') && !p.dataset.wordsplit;
       });
       paras.forEach(p => {
-        p.dataset.sentencesplit = '1';
+        p.dataset.wordsplit = '1';
         const out = document.createDocumentFragment();
         Array.from(p.childNodes).forEach(node => {
           if (node.nodeType === Node.TEXT_NODE) {
-            // Split text into sentence chunks, keeping punctuation attached.
-            // Match sentence-ending punctuation then optional closing quotes
-            // and any trailing whitespace, so the following chunk starts clean.
-            const chunks = node.textContent.match(/[^.!?…]+[.!?…]+["»”’']?|\S[^.!?…]*$/g) || [node.textContent];
-            chunks.forEach(chunk => {
-              if (/^\s*$/.test(chunk)) {
-                out.appendChild(document.createTextNode(chunk));
+            node.textContent.split(/(\s+)/).forEach(part => {
+              if (/^\s*$/.test(part)) {
+                out.appendChild(document.createTextNode(part));
                 return;
               }
-              const s = document.createElement('span');
-              s.className = 'sentence';
-              s.textContent = chunk;
-              out.appendChild(s);
+              const w = document.createElement('span');
+              w.className = 'word';
+              w.textContent = part;
+              out.appendChild(w);
             });
           } else if (node.nodeType === Node.ELEMENT_NODE) {
             // Keep existing inline spans (e.g. name-flourish) intact as one token
-            const s = document.createElement('span');
-            s.className = 'sentence flourish-name';
-            s.appendChild(node);
-            out.appendChild(s);
+            const w = document.createElement('span');
+            w.className = 'word flourish-name';
+            w.appendChild(node);
+            out.appendChild(w);
           } else {
             out.appendChild(node);
           }
@@ -1628,21 +1633,21 @@
       });
     }
 
-    // Reveal the sentences of a given paragraph one by one over `totalMs`,
+    // Reveal the words of a given paragraph one by one over `totalMs`,
     // scheduling timers stored in revealTimers so they can be cleared on restart.
-    function revealSentences(p, totalMs) {
-      const sentences = p.querySelectorAll('.sentence');
-      if (!sentences.length) return;
-      const step = Math.max(100, totalMs / sentences.length);
-      sentences.forEach((s, idx) => {
-        const t = setTimeout(() => s.classList.add('lit'), idx * step);
+    function revealWords(p, totalMs) {
+      const words = p.querySelectorAll('.word');
+      if (!words.length) return;
+      const step = Math.max(20, totalMs / words.length);
+      words.forEach((wordEl, idx) => {
+        const t = setTimeout(() => wordEl.classList.add('lit'), idx * step);
         revealTimers.push(t);
       });
     }
 
-    // Reset all sentence .lit states across the (visible) speech so a replay is clean
-    function resetSentences(speechEl) {
-      speechEl.querySelectorAll('.sentence.lit').forEach(s => s.classList.remove('lit'));
+    // Reset all word .lit states across the (visible) speech so a replay is clean
+    function resetWords(speechEl) {
+      speechEl.querySelectorAll('.word.lit').forEach(w => w.classList.remove('lit'));
     }
 
     function startTimedReveal() {
@@ -1657,7 +1662,7 @@
       const paragraphs = Array.from(speechEl.querySelectorAll('p'));
       paragraphs.forEach(p => p.classList.remove('shown'));
       if (footerEl) footerEl.classList.remove('shown');
-      resetSentences(speechEl);
+      resetWords(speechEl);
 
       const durations = getDurations(langKey, paragraphs.length);
       const delays = getDelays(langKey, paragraphs.length);
@@ -1672,8 +1677,8 @@
           p.classList.add('shown');
           triggerHaptic();
           checkSpecialBursts(p);
-          // Sentence cascade: reveal paragraph's sentences over its full duration window
-          if (!p.classList.contains('pausa')) revealSentences(p, Math.max(500, secs * 1000));
+          // Word cascade: reveal paragraph's words over its full duration window
+          if (!p.classList.contains('pausa')) revealWords(p, Math.max(300, secs * 1000));
         }, delay);
         revealTimers.push(timer);
         delay += secs * 1000;
@@ -2170,10 +2175,10 @@
 
     // ===== Kick off on load (waits for remote settings so timing is correct) =====
     window.addEventListener('DOMContentLoaded', () => {
-      // Pre-split sentences of both languages before the first reveal
+      // Pre-split words of both languages before the first reveal
       ['speech-it', 'speech-es'].forEach(id => {
         const el = document.getElementById(id);
-        if (el) splitParagraphsIntoSentences(el);
+        if (el) splitParagraphsIntoWords(el);
       });
       remoteReady.then(() => startTimedReveal());
     });
