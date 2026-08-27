@@ -10,3 +10,6 @@ Desktop.ini
 *.swp
 *.swo
 *~
+
+# Local backup copies of old page versions (kept off the repo)
+.backup-versions/
