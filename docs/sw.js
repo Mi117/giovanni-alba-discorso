@@ -1,5 +1,5 @@
-const CACHE_NAME = 'discorso-ga-v2';
-const urlsToCache = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
+const CACHE_NAME = 'discorso-ga-v3';
+const urlsToCache = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png', './settings.json'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -31,6 +31,19 @@ self.addEventListener('fetch', (event) => {
           caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
           return response;
         });
+      }).catch(() => caches.match(event.request))
+    );
+    return;
+  }
+
+  // settings.json: always try network first so the latest timing is used,
+  // falling back to cache only when offline.
+  if (url.pathname.endsWith('/settings.json')) {
+    event.respondWith(
+      fetch(event.request).then((response) => {
+        const clone = response.clone();
+        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+        return response;
       }).catch(() => caches.match(event.request))
     );
     return;

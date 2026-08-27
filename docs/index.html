@@ -660,6 +660,28 @@
     color: var(--ink);
   }
 
+  .settings-export {
+    margin-top: 10px;
+  }
+
+  .settings-export .settings-copy {
+    width: 100%;
+    padding: 12px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: #fff;
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--gold);
+    cursor: pointer;
+  }
+
+  .settings-export .settings-copy:active {
+    background: var(--gold);
+    color: #fff;
+  }
+
   .settings-close {
     position: absolute;
     top: 14px;
@@ -1012,7 +1034,10 @@
       <div class="settings-actions">
         <button class="settings-hide" onclick="hideGear()">Nascondi ingranaggio</button>
         <button class="settings-reset" onclick="resetSettings()">Ripristina</button>
-        <button class="settings-save" onclick="applySettings()">Salva e riavvia</button>
+        <button class="settings-save" onclick="applySettings()">Applica</button>
+      </div>
+      <div class="settings-export">
+        <button class="settings-copy" onclick="copyConfigJSON()">Esporta / Copia JSON</button>
       </div>
     </div>
   </div>
@@ -1202,15 +1227,47 @@
     // ===== Timed paragraph reveal (default 12s per paragraph, customizable) =====
     let revealTimers = [];
     const DEFAULT_SECONDS_PER_PARAGRAPH = 4;
+    const DEFAULT_DELAY_PER_PARAGRAPH = 0;
+    const DEFAULT_INITIAL_DELAY = 15;
+
+    // Central settings sourced from docs/settings.json (served by GitHub Pages).
+    // This is the source of truth so every device shows identical timing.
+    // Priority: remote settings.json -> localStorage -> hardcoded defaults.
+    let remoteSettings = null;
+    let forceRemote = false;
+    let remoteResolved = false;
+
+    // ?applySettings=1 forces the central file to win over per-device localStorage
+    (function () {
+      try {
+        forceRemote = new URLSearchParams(window.location.search).get('applySettings') === '1';
+      } catch (e) {}
+    })();
+
+    let resolveRemoteReady;
+    const remoteReady = new Promise((r) => { resolveRemoteReady = r; });
+
+    async function fetchRemoteSettings() {
+      try {
+        const res = await fetch('./settings.json', { cache: 'no-store' });
+        if (res.ok) remoteSettings = await res.json();
+      } catch (e) {}
+      remoteResolved = true;
+      resolveRemoteReady();
+    }
+    fetchRemoteSettings();
+    // Safety: if the fetch hangs, proceed with defaults shortly after load
+    setTimeout(resolveRemoteReady, 1500);
 
     function getDurations(langKey, count) {
+      if (forceRemote) return (remoteSettings && remoteSettings.durations && Array.isArray(remoteSettings.durations[langKey]) && remoteSettings.durations[langKey].length === count) ? remoteSettings.durations[langKey] : new Array(count).fill(DEFAULT_SECONDS_PER_PARAGRAPH);
       let durations = null;
       try {
         const saved = localStorage.getItem('durations_' + langKey);
         if (saved) durations = JSON.parse(saved);
       } catch (e) {}
       if (!durations || durations.length !== count) {
-        durations = new Array(count).fill(DEFAULT_SECONDS_PER_PARAGRAPH);
+        durations = (remoteSettings && remoteSettings.durations && Array.isArray(remoteSettings.durations[langKey]) && remoteSettings.durations[langKey].length === count) ? remoteSettings.durations[langKey] : new Array(count).fill(DEFAULT_SECONDS_PER_PARAGRAPH);
       }
       return durations;
     }
@@ -1221,17 +1278,15 @@
       } catch (e) {}
     }
 
-    const DEFAULT_DELAY_PER_PARAGRAPH = 0;
-    const DEFAULT_INITIAL_DELAY = 0.4;
-
     function getDelays(langKey, count) {
+      if (forceRemote) return (remoteSettings && remoteSettings.delays && Array.isArray(remoteSettings.delays[langKey]) && remoteSettings.delays[langKey].length === count) ? remoteSettings.delays[langKey] : new Array(count).fill(DEFAULT_DELAY_PER_PARAGRAPH);
       let delays = null;
       try {
         const saved = localStorage.getItem('delays_' + langKey);
         if (saved) delays = JSON.parse(saved);
       } catch (e) {}
       if (!delays || delays.length !== count) {
-        delays = new Array(count).fill(DEFAULT_DELAY_PER_PARAGRAPH);
+        delays = (remoteSettings && remoteSettings.delays && Array.isArray(remoteSettings.delays[langKey]) && remoteSettings.delays[langKey].length === count) ? remoteSettings.delays[langKey] : new Array(count).fill(DEFAULT_DELAY_PER_PARAGRAPH);
       }
       return delays;
     }
@@ -1243,6 +1298,10 @@
     }
 
     function getInitialDelay(langKey) {
+      if (forceRemote) {
+        const r = remoteSettings && remoteSettings.initialDelay && parseFloat(remoteSettings.initialDelay[langKey]);
+        return (!isNaN(r) && r >= 0) ? r : DEFAULT_INITIAL_DELAY;
+      }
       try {
         const saved = localStorage.getItem('initialDelay_' + langKey);
         if (saved !== null) {
@@ -1250,6 +1309,8 @@
           if (!isNaN(v) && v >= 0) return v;
         }
       } catch (e) {}
+      const r = remoteSettings && remoteSettings.initialDelay && parseFloat(remoteSettings.initialDelay[langKey]);
+      if (!isNaN(r) && r >= 0) return r;
       return DEFAULT_INITIAL_DELAY;
     }
 
@@ -1409,6 +1470,58 @@
       closeSettings();
       startTimedReveal();
       window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // Build a settings.json-ready object from current inputs for BOTH languages,
+    // then copy it to the clipboard so the speaker can paste it back into the repo.
+    function buildConfigObject() {
+      // Read current inputs for the active language tab
+      const langKey = currentLangKey();
+      const durInputs = document.querySelectorAll('#settings-list input[type="number"]');
+      const delaysInputs = document.querySelectorAll('#settings-list-delays input[type="number"]');
+      const initInput = document.getElementById('initial-delay');
+      const durations = Array.from(durInputs).map(inp => {
+        const v = parseFloat(inp.value);
+        return isNaN(v) || v <= 0 ? DEFAULT_SECONDS_PER_PARAGRAPH : v;
+      });
+      const delays = Array.from(delaysInputs).map(inp => {
+        const v = parseFloat(inp.value);
+        return isNaN(v) || v < 0 ? DEFAULT_DELAY_PER_PARAGRAPH : v;
+      });
+      const initialDelay = parseFloat(initInput.value);
+      return {
+        initialDelay: { it: langKey === 'it' ? (isNaN(initialDelay) || initialDelay < 0 ? DEFAULT_INITIAL_DELAY : initialDelay) : (remoteSettings && remoteSettings.initialDelay ? remoteSettings.initialDelay.it : DEFAULT_INITIAL_DELAY), es: langKey === 'es' ? (isNaN(initialDelay) || initialDelay < 0 ? DEFAULT_INITIAL_DELAY : initialDelay) : (remoteSettings && remoteSettings.initialDelay ? remoteSettings.initialDelay.es : DEFAULT_INITIAL_DELAY) },
+        durations: { it: langKey === 'it' ? durations : (remoteSettings && remoteSettings.durations ? remoteSettings.durations.it : []), es: langKey === 'es' ? durations : (remoteSettings && remoteSettings.durations ? remoteSettings.durations.es : []) },
+        delays: { it: langKey === 'it' ? delays : (remoteSettings && remoteSettings.delays ? remoteSettings.delays.it : []), es: langKey === 'es' ? delays : (remoteSettings && remoteSettings.delays ? remoteSettings.delays.es : []) }
+      };
+    }
+
+    function copyConfigJSON() {
+      const obj = buildConfigObject();
+      const text = JSON.stringify(obj, null, 2);
+      const done = () => {
+        const btn = document.querySelector('.settings-copy');
+        if (btn) { const old = btn.textContent; btn.textContent = 'JSON copiato ✓'; btn.style.color = '#2f6b4f'; setTimeout(() => { btn.textContent = old; btn.style.color = ''; }, 1800); }
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done).catch(() => fallbackCopy(text, done));
+      } else {
+        fallbackCopy(text, done);
+      }
+    }
+
+    function fallbackCopy(text, done) {
+      try {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        if (done) done();
+      } catch (e) {}
     }
 
     function resetSettings() {
@@ -1956,9 +2069,9 @@
       }
     })();
 
-    // ===== Kick off on load =====
+    // ===== Kick off on load (waits for remote settings so timing is correct) =====
     window.addEventListener('DOMContentLoaded', () => {
-      startTimedReveal();
+      remoteReady.then(() => startTimedReveal());
     });
   </script>
 </body>
