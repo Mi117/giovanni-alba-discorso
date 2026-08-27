@@ -1,20 +1,15 @@
 <!DOCTYPE html>
 <!--
-  index-v16 - Giovanni & Alba wedding speech page
-  CHANGES vs v15:
-   - SENTENCE-BY-SENTENCE FADE (replaces word-by-word): each sentence of a
-     paragraph fades in with a calm pure-soft-fade (no drift), instead of the
-     choppy per-word effect. Reads more naturally for a live wedding speech.
-   - Pacing: sentences are revealed to finish exactly when that paragraph's
-     duration window ends, so the overall timing schedule is UNCHANGED (same
-     delays and durations from settings.json / localStorage / hardcoded fallback).
-   - Excluded: (pausa) markers appear whole. Names inside .name-flourish spans
-     stay intact (not split).
-   - v15+ retained: hardcoded final timing fallback, network-first HTML shell
-     in sw.js, central settings.json sync, "Applica" + "Esporta/Copia JSON",
-     default 15s first-paragraph delay, tabbed settings, living pulse rings.
-  REVERT: word-by-word version is in index-v15b_word-fade-backup.html; v14
-  pre-fade version in index-v14*.html. To revert, copy that file over this one.
+  index-v14 - Giovanni & Alba wedding speech page
+  CHANGES vs v13:
+   - HIDEABLE SETTINGS GEAR: a "Nascondi ingranaggio" button in the settings
+     panel footer hides the gear icon with a smooth fade-out. The gear can be
+     revealed again by tapping the top-left corner 5 times within 2 seconds.
+     State is persisted in localStorage (key: settingsHidden) so the gear
+     stays hidden across sessions until explicitly revealed.
+   - All v13 features unchanged: tabbed settings panel (duration/delay),
+     living pulse breathing animation, timed reveal, font controls, confetti,
+     swipe hint, sw.js offline cache.
 -->
 <html lang="it">
 <head>
@@ -202,21 +197,6 @@
     transition: opacity 1s ease-out, transform 1s ease-out;
   }
 
-  /* Sentence-by-sentence fade (v16): each sentence fades in softly, no drift */
-  .speech p .sentence {
-    opacity: 0;
-    transition: opacity 0.8s ease-out;
-    will-change: opacity;
-  }
-
-  .speech p.shown .sentence.lit {
-    opacity: 1;
-  }
-
-  .speech p .sentence.flourish-name {
-    white-space: nowrap;
-  }
-
   .speech p.pausa {
     text-align: center;
     font-style: italic;
@@ -224,7 +204,6 @@
     font-size: 0.81em;
     margin: -6px 0 22px;
   }
- /* pausa lines are NOT sentence-split; .sentence rules above do not apply to them */
 
   .speech p.pausa.shown {
     transition: opacity 1s ease-out, transform 1s ease-out, letter-spacing 1.2s ease-out 0.2s;
@@ -801,7 +780,7 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .monogram, h1, .subtitle, .note, .speech p, footer, #lang-it, #lang-es, .divider, .speech p .sentence {
+    .monogram, h1, .subtitle, .note, .speech p, footer, #lang-it, #lang-es, .divider {
       animation: none !important;
       transition: none !important;
       opacity: 1 !important;
@@ -1251,26 +1230,9 @@
     const DEFAULT_DELAY_PER_PARAGRAPH = 0;
     const DEFAULT_INITIAL_DELAY = 15;
 
-    // Final rehearsed timing, hardcoded directly in the page as a safe fallback.
-    // Used whenever settings.json is unreachable (offline / cached), so EVERY
-    // device still shows the same speech timing. Matches docs/settings.json.
-    const FALLBACK_DURATIONS = [30, 40, 4, 67, 12, 2, 10, 30, 13, 5, 40, 27, 13, 12, 4, 4];
-    const FALLBACK_DELAYS = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-
-    function fallbackDurations(count, langKey) {
-      return (Array.isArray(FALLBACK_DURATIONS) && FALLBACK_DURATIONS.length === count)
-        ? FALLBACK_DURATIONS.slice()
-        : new Array(count).fill(DEFAULT_SECONDS_PER_PARAGRAPH);
-    }
-    function fallbackDelays(count, langKey) {
-      return (Array.isArray(FALLBACK_DELAYS) && FALLBACK_DELAYS.length === count)
-        ? FALLBACK_DELAYS.slice()
-        : new Array(count).fill(DEFAULT_DELAY_PER_PARAGRAPH);
-    }
-
     // Central settings sourced from docs/settings.json (served by GitHub Pages).
     // This is the source of truth so every device shows identical timing.
-    // Priority: remote settings.json -> localStorage -> hardcoded fallback.
+    // Priority: remote settings.json -> localStorage -> hardcoded defaults.
     let remoteSettings = null;
     let forceRemote = false;
     let remoteResolved = false;
@@ -1298,14 +1260,14 @@
     setTimeout(resolveRemoteReady, 1500);
 
     function getDurations(langKey, count) {
-      if (forceRemote) return (remoteSettings && remoteSettings.durations && Array.isArray(remoteSettings.durations[langKey]) && remoteSettings.durations[langKey].length === count) ? remoteSettings.durations[langKey] : fallbackDurations(count, langKey);
+      if (forceRemote) return (remoteSettings && remoteSettings.durations && Array.isArray(remoteSettings.durations[langKey]) && remoteSettings.durations[langKey].length === count) ? remoteSettings.durations[langKey] : new Array(count).fill(DEFAULT_SECONDS_PER_PARAGRAPH);
       let durations = null;
       try {
         const saved = localStorage.getItem('durations_' + langKey);
         if (saved) durations = JSON.parse(saved);
       } catch (e) {}
       if (!durations || durations.length !== count) {
-        durations = (remoteSettings && remoteSettings.durations && Array.isArray(remoteSettings.durations[langKey]) && remoteSettings.durations[langKey].length === count) ? remoteSettings.durations[langKey] : fallbackDurations(count, langKey);
+        durations = (remoteSettings && remoteSettings.durations && Array.isArray(remoteSettings.durations[langKey]) && remoteSettings.durations[langKey].length === count) ? remoteSettings.durations[langKey] : new Array(count).fill(DEFAULT_SECONDS_PER_PARAGRAPH);
       }
       return durations;
     }
@@ -1317,14 +1279,14 @@
     }
 
     function getDelays(langKey, count) {
-      if (forceRemote) return (remoteSettings && remoteSettings.delays && Array.isArray(remoteSettings.delays[langKey]) && remoteSettings.delays[langKey].length === count) ? remoteSettings.delays[langKey] : fallbackDelays(count, langKey);
+      if (forceRemote) return (remoteSettings && remoteSettings.delays && Array.isArray(remoteSettings.delays[langKey]) && remoteSettings.delays[langKey].length === count) ? remoteSettings.delays[langKey] : new Array(count).fill(DEFAULT_DELAY_PER_PARAGRAPH);
       let delays = null;
       try {
         const saved = localStorage.getItem('delays_' + langKey);
         if (saved) delays = JSON.parse(saved);
       } catch (e) {}
       if (!delays || delays.length !== count) {
-        delays = (remoteSettings && remoteSettings.delays && Array.isArray(remoteSettings.delays[langKey]) && remoteSettings.delays[langKey].length === count) ? remoteSettings.delays[langKey] : fallbackDelays(count, langKey);
+        delays = (remoteSettings && remoteSettings.delays && Array.isArray(remoteSettings.delays[langKey]) && remoteSettings.delays[langKey].length === count) ? remoteSettings.delays[langKey] : new Array(count).fill(DEFAULT_DELAY_PER_PARAGRAPH);
       }
       return delays;
     }
@@ -1587,64 +1549,6 @@
       closeSettings();
     }
 
-    // Wrap each sentence of a non-pausa paragraph in <span class="sentence"> so
-    // sentences fade in one by one. Names inside .name-flourish are kept as a
-    // single unit so their underline-flourish logic still works.
-    // Idempotent: skips paragraphs already carrying a data-sentencesplit flag.
-    function splitParagraphsIntoSentences(container) {
-      const paras = Array.from(container.querySelectorAll('p')).filter(p => {
-        return !p.classList.contains('pausa') && !p.dataset.sentencesplit;
-      });
-      paras.forEach(p => {
-        p.dataset.sentencesplit = '1';
-        const out = document.createDocumentFragment();
-        Array.from(p.childNodes).forEach(node => {
-          if (node.nodeType === Node.TEXT_NODE) {
-            // Split text into sentence chunks, keeping punctuation attached.
-            // Match sentence-ending punctuation then optional closing quotes
-            // and any trailing whitespace, so the following chunk starts clean.
-            const chunks = node.textContent.match(/[^.!?…]+[.!?…]+["»”’']?|\S[^.!?…]*$/g) || [node.textContent];
-            chunks.forEach(chunk => {
-              if (/^\s*$/.test(chunk)) {
-                out.appendChild(document.createTextNode(chunk));
-                return;
-              }
-              const s = document.createElement('span');
-              s.className = 'sentence';
-              s.textContent = chunk;
-              out.appendChild(s);
-            });
-          } else if (node.nodeType === Node.ELEMENT_NODE) {
-            // Keep existing inline spans (e.g. name-flourish) intact as one token
-            const s = document.createElement('span');
-            s.className = 'sentence flourish-name';
-            s.appendChild(node);
-            out.appendChild(s);
-          } else {
-            out.appendChild(node);
-          }
-        });
-        p.appendChild(out);
-      });
-    }
-
-    // Reveal the sentences of a given paragraph one by one over `totalMs`,
-    // scheduling timers stored in revealTimers so they can be cleared on restart.
-    function revealSentences(p, totalMs) {
-      const sentences = p.querySelectorAll('.sentence');
-      if (!sentences.length) return;
-      const step = Math.max(100, totalMs / sentences.length);
-      sentences.forEach((s, idx) => {
-        const t = setTimeout(() => s.classList.add('lit'), idx * step);
-        revealTimers.push(t);
-      });
-    }
-
-    // Reset all sentence .lit states across the (visible) speech so a replay is clean
-    function resetSentences(speechEl) {
-      speechEl.querySelectorAll('.sentence.lit').forEach(s => s.classList.remove('lit'));
-    }
-
     function startTimedReveal() {
       revealTimers.forEach(t => clearTimeout(t));
       revealTimers = [];
@@ -1657,7 +1561,6 @@
       const paragraphs = Array.from(speechEl.querySelectorAll('p'));
       paragraphs.forEach(p => p.classList.remove('shown'));
       if (footerEl) footerEl.classList.remove('shown');
-      resetSentences(speechEl);
 
       const durations = getDurations(langKey, paragraphs.length);
       const delays = getDelays(langKey, paragraphs.length);
@@ -1667,15 +1570,13 @@
       paragraphs.forEach((p, i) => {
         const extraDelay = (delays[i] != null ? delays[i] : DEFAULT_DELAY_PER_PARAGRAPH) * 1000;
         delay += extraDelay;
-        const secs = durations[i] != null ? durations[i] : DEFAULT_SECONDS_PER_PARAGRAPH;
         const timer = setTimeout(() => {
           p.classList.add('shown');
           triggerHaptic();
           checkSpecialBursts(p);
-          // Sentence cascade: reveal paragraph's sentences over its full duration window
-          if (!p.classList.contains('pausa')) revealSentences(p, Math.max(500, secs * 1000));
         }, delay);
         revealTimers.push(timer);
+        const secs = durations[i] != null ? durations[i] : DEFAULT_SECONDS_PER_PARAGRAPH;
         delay += secs * 1000;
       });
 
@@ -2170,11 +2071,6 @@
 
     // ===== Kick off on load (waits for remote settings so timing is correct) =====
     window.addEventListener('DOMContentLoaded', () => {
-      // Pre-split sentences of both languages before the first reveal
-      ['speech-it', 'speech-es'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) splitParagraphsIntoSentences(el);
-      });
       remoteReady.then(() => startTimedReveal());
     });
   </script>
