@@ -14,7 +14,7 @@
      defaults), "Applica" + "Esporta/Copia JSON" buttons, default 15s
      first-paragraph delay, tabbed settings, living pulse rings, hideable gear.
   REVERT: previous complete version is in index-v14*.html; to revert, copy
-  that file's content over this file.
+  that file's content over docs/index.html.
 -->
 <html lang="it">
 <head>
@@ -228,6 +228,12 @@
     margin: -6px 0 22px;
   }
  /* pausa lines are NOT word-split; .word rules above do not apply to them */
+    text-align: center;
+    font-style: italic;
+    color: var(--gold);
+    font-size: 0.81em;
+    margin: -6px 0 22px;
+  }
 
   .speech p.pausa.shown {
     transition: opacity 1s ease-out, transform 1s ease-out, letter-spacing 1.2s ease-out 0.2s;

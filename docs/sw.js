@@ -1,4 +1,4 @@
-const CACHE_NAME = 'discorso-ga-v3';
+const CACHE_NAME = 'discorso-ga-v4';
 const urlsToCache = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png', './settings.json'];
 
 self.addEventListener('install', (event) => {
