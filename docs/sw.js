@@ -1,4 +1,4 @@
-const CACHE_NAME = 'discorso-ga-v4';
+const CACHE_NAME = 'discorso-ga-v5';
 const urlsToCache = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png', './settings.json'];
 
 self.addEventListener('install', (event) => {
@@ -49,7 +49,21 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // All other requests: cache-first, network fallback
+  // HTML shell ('/' and './index.html'): network-first so the LATEST page code
+  // (and therefore the latest settings fetching) always reaches every device.
+  // Prevents stale service workers / cached old pages from serving old settings.
+  if (url.pathname === '/' || url.pathname.endsWith('/index.html')) {
+    event.respondWith(
+      fetch(event.request).then((response) => {
+        const clone = response.clone();
+        if (response.ok) caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+        return response;
+      }).catch(() => caches.match(event.request).then((c) => c || caches.match('./index.html')))
+    );
+    return;
+  }
+
+  // All other requests (icons, manifest, static assets): cache-first, network fallback
   event.respondWith(
     caches.match(event.request).then((response) => response || fetch(event.request))
   );

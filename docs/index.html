@@ -1254,9 +1254,26 @@
     const DEFAULT_DELAY_PER_PARAGRAPH = 0;
     const DEFAULT_INITIAL_DELAY = 15;
 
+    // Final rehearsed timing, hardcoded directly in the page as a safe fallback.
+    // Used whenever settings.json is unreachable (offline / cached), so EVERY
+    // device still shows the same speech timing. Matches docs/settings.json.
+    const FALLBACK_DURATIONS = [30, 40, 4, 67, 12, 2, 10, 30, 13, 5, 40, 27, 13, 12, 4, 4];
+    const FALLBACK_DELAYS = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+
+    function fallbackDurations(count, langKey) {
+      return (Array.isArray(FALLBACK_DURATIONS) && FALLBACK_DURATIONS.length === count)
+        ? FALLBACK_DURATIONS.slice()
+        : new Array(count).fill(DEFAULT_SECONDS_PER_PARAGRAPH);
+    }
+    function fallbackDelays(count, langKey) {
+      return (Array.isArray(FALLBACK_DELAYS) && FALLBACK_DELAYS.length === count)
+        ? FALLBACK_DELAYS.slice()
+        : new Array(count).fill(DEFAULT_DELAY_PER_PARAGRAPH);
+    }
+
     // Central settings sourced from docs/settings.json (served by GitHub Pages).
     // This is the source of truth so every device shows identical timing.
-    // Priority: remote settings.json -> localStorage -> hardcoded defaults.
+    // Priority: remote settings.json -> localStorage -> hardcoded fallback.
     let remoteSettings = null;
     let forceRemote = false;
     let remoteResolved = false;
@@ -1284,14 +1301,14 @@
     setTimeout(resolveRemoteReady, 1500);
 
     function getDurations(langKey, count) {
-      if (forceRemote) return (remoteSettings && remoteSettings.durations && Array.isArray(remoteSettings.durations[langKey]) && remoteSettings.durations[langKey].length === count) ? remoteSettings.durations[langKey] : new Array(count).fill(DEFAULT_SECONDS_PER_PARAGRAPH);
+      if (forceRemote) return (remoteSettings && remoteSettings.durations && Array.isArray(remoteSettings.durations[langKey]) && remoteSettings.durations[langKey].length === count) ? remoteSettings.durations[langKey] : fallbackDurations(count, langKey);
       let durations = null;
       try {
         const saved = localStorage.getItem('durations_' + langKey);
         if (saved) durations = JSON.parse(saved);
       } catch (e) {}
       if (!durations || durations.length !== count) {
-        durations = (remoteSettings && remoteSettings.durations && Array.isArray(remoteSettings.durations[langKey]) && remoteSettings.durations[langKey].length === count) ? remoteSettings.durations[langKey] : new Array(count).fill(DEFAULT_SECONDS_PER_PARAGRAPH);
+        durations = (remoteSettings && remoteSettings.durations && Array.isArray(remoteSettings.durations[langKey]) && remoteSettings.durations[langKey].length === count) ? remoteSettings.durations[langKey] : fallbackDurations(count, langKey);
       }
       return durations;
     }
@@ -1303,14 +1320,14 @@
     }
 
     function getDelays(langKey, count) {
-      if (forceRemote) return (remoteSettings && remoteSettings.delays && Array.isArray(remoteSettings.delays[langKey]) && remoteSettings.delays[langKey].length === count) ? remoteSettings.delays[langKey] : new Array(count).fill(DEFAULT_DELAY_PER_PARAGRAPH);
+      if (forceRemote) return (remoteSettings && remoteSettings.delays && Array.isArray(remoteSettings.delays[langKey]) && remoteSettings.delays[langKey].length === count) ? remoteSettings.delays[langKey] : fallbackDelays(count, langKey);
       let delays = null;
       try {
         const saved = localStorage.getItem('delays_' + langKey);
         if (saved) delays = JSON.parse(saved);
       } catch (e) {}
       if (!delays || delays.length !== count) {
-        delays = (remoteSettings && remoteSettings.delays && Array.isArray(remoteSettings.delays[langKey]) && remoteSettings.delays[langKey].length === count) ? remoteSettings.delays[langKey] : new Array(count).fill(DEFAULT_DELAY_PER_PARAGRAPH);
+        delays = (remoteSettings && remoteSettings.delays && Array.isArray(remoteSettings.delays[langKey]) && remoteSettings.delays[langKey].length === count) ? remoteSettings.delays[langKey] : fallbackDelays(count, langKey);
       }
       return delays;
     }
