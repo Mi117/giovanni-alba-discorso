@@ -10,6 +10,10 @@
    - All v13 features unchanged: tabbed settings panel (duration/delay),
      living pulse breathing animation, timed reveal, font controls, confetti,
      swipe hint, sw.js offline cache.
+
+  TEMPORARY (ceremony build): the settings gear + panel + secret tap-zone are
+  hidden via a pure-CSS block (search "TEMPORARY: settings gear"). The code and
+  timing are unchanged. REVERT: delete that CSS block to restore the gear.
 -->
 <html lang="it">
 <head>
@@ -496,7 +500,21 @@
     background: transparent;
   }
 
+  /* ===== TEMPORARY: settings gear + panel fully hidden for the ceremony =====
+     Purely visual hiding so nobody can access the settings. The underlying
+     code/timing is unchanged. REVERT: delete this block to restore the gear. */
+  .settings-btn#settings-btn,
+  #secret-zone {
+    display: none !important;
+  }
+
   .settings-overlay {
+    display: none !important;
+  }
+
+  .settings-overlay {
+    position: fixed;
+    inset: 0;
     position: fixed;
     inset: 0;
     background: rgba(43, 36, 29, 0.35);
