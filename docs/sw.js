@@ -1,4 +1,4 @@
-const CACHE_NAME = 'discorso-ga-v8';
+const CACHE_NAME = 'discorso-ga-v9';
 const urlsToCache = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png', './settings.json'];
 
 self.addEventListener('install', (event) => {
@@ -16,6 +16,14 @@ self.addEventListener('activate', (event) => {
       );
     }).then(() => self.clients.claim())
   );
+});
+
+// Allow the page to tell a newly-installed worker to activate immediately,
+// so the latest version takes over without waiting for the next reload.
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
 });
 
 self.addEventListener('fetch', (event) => {

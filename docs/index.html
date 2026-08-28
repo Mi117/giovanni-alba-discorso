@@ -1752,9 +1752,38 @@
     }
 
     // Register service worker for real installability (Android/Chrome)
+    // updateViaCache:'none' forces the browser to re-fetch sw.js every time so
+    // a stale cached service worker can never keep serving an old page.
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js').catch(() => {});
+        navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' })
+          .then((reg) => {
+            // When a newer service worker takes control, reload so the fresh
+            // page (and hidden settings) is shown immediately.
+            navigator.serviceWorker.addEventListener('controllerchange', () => {
+              window.location.reload();
+            });
+            // If a new SW is already waiting/installing, activate it right away.
+            if (reg.waiting) {
+              reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+            }
+            reg.addEventListener('updatefound', () => {
+              const newWorker = reg.installing;
+              if (newWorker) {
+                newWorker.addEventListener('statechange', () => {
+                  if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                    newWorker.postMessage({ type: 'SKIP_WAITING' });
+                  }
+                });
+              }
+            });
+            // Actively check for updates on load and whenever the tab is shown.
+            reg.update();
+            document.addEventListener('visibilitychange', () => {
+              if (document.visibilityState === 'visible') reg.update();
+            });
+          })
+          .catch(() => {});
       });
     }
 
