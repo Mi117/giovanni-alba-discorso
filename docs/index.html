@@ -1,19 +1,22 @@
 <!DOCTYPE html>
 <!--
-  index-v14 - Giovanni & Alba wedding speech page
-  CHANGES vs v13:
+  index-v17 - Giovanni & Alba wedding speech page
+  CHANGES vs v14:
    - HIDEABLE SETTINGS GEAR: a "Nascondi ingranaggio" button in the settings
      panel footer hides the gear icon with a smooth fade-out. The gear can be
      revealed again by tapping the top-left corner 5 times within 2 seconds.
      State is persisted in localStorage (key: settingsHidden) so the gear
      stays hidden across sessions until explicitly revealed.
-   - All v13 features unchanged: tabbed settings panel (duration/delay),
+   - All v14 features unchanged: tabbed settings panel (duration/delay),
      living pulse breathing animation, timed reveal, font controls, confetti,
      swipe hint, sw.js offline cache.
-
-  TEMPORARY (ceremony build): the settings gear + panel + secret tap-zone are
-  hidden via a pure-CSS block (search "TEMPORARY: settings gear"). The code and
-  timing are unchanged. REVERT: delete that CSS block to restore the gear.
+   - Hardcoded default timing baked into the page: initial delay 4s; per-paragraph
+     durations [5,5,3,10,4,2,4,5,3,4,5,4,3,3,2,4]; delays all 0. These are the
+     baseline fallback; each device can override them per-own via the gear
+     (stored in that device's localStorage). settings.json holds the same values
+     so every guest starts from the same timing.
+  NOTE: the temporary ceremony "hide settings" CSS block was removed to restore
+  the gear so everyone can adjust timing on their own device.
 -->
 <html lang="it">
 <head>
@@ -500,21 +503,7 @@
     background: transparent;
   }
 
-  /* ===== TEMPORARY: settings gear + panel fully hidden for the ceremony =====
-     Purely visual hiding so nobody can access the settings. The underlying
-     code/timing is unchanged. REVERT: delete this block to restore the gear. */
-  .settings-btn#settings-btn,
-  #secret-zone {
-    display: none !important;
-  }
-
   .settings-overlay {
-    display: none !important;
-  }
-
-  .settings-overlay {
-    position: fixed;
-    inset: 0;
     position: fixed;
     inset: 0;
     background: rgba(43, 36, 29, 0.35);
@@ -1242,11 +1231,15 @@
       if (saved === 'es') setLang('es');
     })();
 
-    // ===== Timed paragraph reveal (default 12s per paragraph, customizable) =====
+    // ===== Timed paragraph reveal (customizable) =====
     let revealTimers = [];
     const DEFAULT_SECONDS_PER_PARAGRAPH = 4;
     const DEFAULT_DELAY_PER_PARAGRAPH = 0;
-    const DEFAULT_INITIAL_DELAY = 15;
+    // Hardcoded default timing (baked into the page as the baseline). Guests can
+    // override these per-device via the gear (stored in localStorage).
+    const DEFAULT_INITIAL_DELAY = 4;
+    const DEFAULT_DURATIONS = [5, 5, 3, 10, 4, 2, 4, 5, 3, 4, 5, 4, 3, 3, 2, 4];
+    const DEFAULT_DELAYS = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 
     // Central settings sourced from docs/settings.json (served by GitHub Pages).
     // This is the source of truth so every device shows identical timing.
@@ -1285,7 +1278,7 @@
         if (saved) durations = JSON.parse(saved);
       } catch (e) {}
       if (!durations || durations.length !== count) {
-        durations = (remoteSettings && remoteSettings.durations && Array.isArray(remoteSettings.durations[langKey]) && remoteSettings.durations[langKey].length === count) ? remoteSettings.durations[langKey] : new Array(count).fill(DEFAULT_SECONDS_PER_PARAGRAPH);
+        durations = (remoteSettings && remoteSettings.durations && Array.isArray(remoteSettings.durations[langKey]) && remoteSettings.durations[langKey].length === count) ? remoteSettings.durations[langKey] : (DEFAULT_DURATIONS.length === count ? DEFAULT_DURATIONS : new Array(count).fill(DEFAULT_SECONDS_PER_PARAGRAPH));
       }
       return durations;
     }
@@ -1297,14 +1290,14 @@
     }
 
     function getDelays(langKey, count) {
-      if (forceRemote) return (remoteSettings && remoteSettings.delays && Array.isArray(remoteSettings.delays[langKey]) && remoteSettings.delays[langKey].length === count) ? remoteSettings.delays[langKey] : new Array(count).fill(DEFAULT_DELAY_PER_PARAGRAPH);
+      if (forceRemote) return (remoteSettings && remoteSettings.delays && Array.isArray(remoteSettings.delays[langKey]) && remoteSettings.delays[langKey].length === count) ? remoteSettings.delays[langKey] : (DEFAULT_DELAYS.length === count ? DEFAULT_DELAYS : new Array(count).fill(DEFAULT_DELAY_PER_PARAGRAPH));
       let delays = null;
       try {
         const saved = localStorage.getItem('delays_' + langKey);
         if (saved) delays = JSON.parse(saved);
       } catch (e) {}
       if (!delays || delays.length !== count) {
-        delays = (remoteSettings && remoteSettings.delays && Array.isArray(remoteSettings.delays[langKey]) && remoteSettings.delays[langKey].length === count) ? remoteSettings.delays[langKey] : new Array(count).fill(DEFAULT_DELAY_PER_PARAGRAPH);
+        delays = (remoteSettings && remoteSettings.delays && Array.isArray(remoteSettings.delays[langKey]) && remoteSettings.delays[langKey].length === count) ? remoteSettings.delays[langKey] : (DEFAULT_DELAYS.length === count ? DEFAULT_DELAYS : new Array(count).fill(DEFAULT_DELAY_PER_PARAGRAPH));
       }
       return delays;
     }
